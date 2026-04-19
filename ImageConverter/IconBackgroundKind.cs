@@ -1,7 +1,7 @@
 namespace ImageConverter;
 
 /// <summary>Solid letterbox fill when building square ICO canvases.</summary>
-public enum IconBackgroundKind
+internal enum IconBackgroundKind
 {
     SolidWhite,
     SolidBlack

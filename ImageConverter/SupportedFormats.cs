@@ -3,12 +3,11 @@ namespace ImageConverter;
 /// <summary>Maps UI format indices to file extensions and Magick.NET formats.</summary>
 internal static class SupportedFormats
 {
-    public const int Count = 6;
+    internal const int Count = 6;
 
-    /// <summary>Output file extensions (JPEG uses .jpg).</summary>
-    public static readonly string[] FileExtensions = [".jpg", ".png", ".bmp", ".gif", ".webp", ".ico"];
+    private static readonly string[] FileExtensions = [".jpg", ".png", ".bmp", ".gif", ".webp", ".ico"];
 
-    public static string GetFileExtension(int formatIndex)
+    internal static string GetFileExtension(int formatIndex)
     {
         if (formatIndex < 0 || formatIndex >= Count)
         {
@@ -19,7 +18,7 @@ internal static class SupportedFormats
     }
 
     /// <summary>Builds destination path: same base name, extension from selected output format.</summary>
-    public static string BuildDestinationPath(string sourceFilePath, string destinationFolder, int outputFormatIndex)
+    internal static string BuildDestinationPath(string sourceFilePath, string destinationFolder, int outputFormatIndex)
     {
         var ext = GetFileExtension(outputFormatIndex);
         var baseName = Path.GetFileNameWithoutExtension(sourceFilePath);
@@ -27,7 +26,7 @@ internal static class SupportedFormats
     }
 
     /// <summary>Returns the UI format index for this path’s extension, or false if unrecognized.</summary>
-    public static bool TryGetFormatIndexForPath(string filePath, out int formatIndex)
+    internal static bool TryGetFormatIndexForPath(string filePath, out int formatIndex)
     {
         formatIndex = -1;
         for (var i = 0; i < Count; i++)
@@ -43,7 +42,7 @@ internal static class SupportedFormats
     }
 
     /// <summary>True when the file extension matches the selected “Convert from” format (JPEG accepts .jpg and .jpeg).</summary>
-    public static bool FormatIndexMatchesExtension(string filePath, int formatIndex)
+    internal static bool FormatIndexMatchesExtension(string filePath, int formatIndex)
     {
         var ext = Path.GetExtension(filePath).Trim();
         if (string.IsNullOrEmpty(ext))

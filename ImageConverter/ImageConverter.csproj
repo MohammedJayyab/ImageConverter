@@ -10,10 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="ImageConvert.ico" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Magick.NET-Q16-AnyCPU" Version="14.12.0" />
   </ItemGroup>
 

@@ -72,6 +72,7 @@
             contextMenuPreview = new ContextMenuStrip(components);
             toolStripMenuItemPreviewCopy = new ToolStripMenuItem();
             toolStripMenuItemPreviewPaste = new ToolStripMenuItem();
+            toolStripMenuItemPreviewConvertTo = new ToolStripMenuItem();
             toolStripMenuItemPreviewDelete = new ToolStripMenuItem();
             toolStripMenuItemOpenSourceLocation = new ToolStripMenuItem();
             listViewPreview = new ListView();
@@ -562,7 +563,7 @@
             // 
             // contextMenuPreview
             // 
-            contextMenuPreview.Items.AddRange(new ToolStripItem[] { toolStripMenuItemPreviewCopy, toolStripMenuItemPreviewDelete, toolStripMenuItemOpenSourceLocation, toolStripMenuItemPreviewPaste });
+            contextMenuPreview.Items.AddRange(new ToolStripItem[] { toolStripMenuItemPreviewCopy, toolStripMenuItemPreviewConvertTo, toolStripMenuItemPreviewDelete, toolStripMenuItemOpenSourceLocation, toolStripMenuItemPreviewPaste });
             contextMenuPreview.Name = "contextMenuPreview";
             // 
             // toolStripMenuItemPreviewCopy
@@ -571,6 +572,13 @@
             toolStripMenuItemPreviewCopy.Size = new Size(224, 32);
             toolStripMenuItemPreviewCopy.Text = "&Copy";
             toolStripMenuItemPreviewCopy.Visible = false;
+            // 
+            // toolStripMenuItemPreviewConvertTo
+            // 
+            toolStripMenuItemPreviewConvertTo.Name = "toolStripMenuItemPreviewConvertTo";
+            toolStripMenuItemPreviewConvertTo.Size = new Size(224, 32);
+            toolStripMenuItemPreviewConvertTo.Text = "&Convert to…";
+            toolStripMenuItemPreviewConvertTo.Visible = false;
             // 
             // toolStripMenuItemPreviewPaste
             // 
@@ -792,6 +800,7 @@
         private Button btnOpenDestination;
         private ContextMenuStrip contextMenuPreview;
         private ToolStripMenuItem toolStripMenuItemPreviewCopy;
+        private ToolStripMenuItem toolStripMenuItemPreviewConvertTo;
         private ToolStripMenuItem toolStripMenuItemPreviewPaste;
         private ToolStripMenuItem toolStripMenuItemPreviewDelete;
         private ToolStripMenuItem toolStripMenuItemOpenSourceLocation;

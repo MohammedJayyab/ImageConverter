@@ -3,9 +3,9 @@ namespace ImageConverter;
 /// <summary>Runs <see cref="ImageConversion.Convert"/> over a list of files (used by the main window).</summary>
 internal static class BatchConversionRunner
 {
-    public sealed record RunResult(int SuccessCount, int FailCount, IReadOnlyList<string> SuccessfulDestinationPaths);
+    internal sealed record RunResult(int SuccessCount, int FailCount, IReadOnlyList<string> SuccessfulDestinationPaths);
 
-    public static RunResult Run(
+    internal static RunResult Run(
         IReadOnlyList<string> sourcePaths,
         string destinationFolder,
         int outputFormatIndex,

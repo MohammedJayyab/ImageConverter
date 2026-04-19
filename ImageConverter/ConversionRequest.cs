@@ -1,7 +1,7 @@
 namespace ImageConverter;
 
 /// <summary>Parameters for a single file conversion (no Magick types — keeps UI layer free of ImageMagick references).</summary>
-public sealed class ConversionRequest
+internal sealed class ConversionRequest
 {
     public required string SourcePath { get; init; }
     public required string DestinationPath { get; init; }

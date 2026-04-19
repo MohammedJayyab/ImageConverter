@@ -2,36 +2,35 @@
 
 **Windows batch image conversion with format preview.**
 
-A minimal **Windows Forms** utility for batch image conversion among **JPEG, PNG, BMP, GIF, WEBP, and ICO**, with folder-based review thumbnails, ICO-specific sizing and letterboxing, cancellable batches, and single-step undo for recent file operations.
+Desktop utility on **.NET 8** / **Windows**: batch-convert images among **JPEG, PNG, BMP, GIF, WEBP, and ICO** using **Magick.NET**, with a folder **review pane** (thumbnails via **System.Drawing**), ICO-specific options, progress/cancel, and **single-step undo** for recent writes and deletes.
 
 ---
 
 ## Overview
 
-Image Converter targets **.NET 8** on Windows. Conversion uses **Magick.NET** (ImageMagick bindings); on-screen thumbnails use **System.Drawing**. The UI separates presentation (`frmMain`) from conversion (`ImageConversion`, `BatchConversionRunner`), settings (`AppSettings` / `AppSettingsStore`), and preview enumeration (`FolderThumbnailLoader`). User preferences and window layout persist to **`config.ini`** next to the executable.
+The WinForms shell (`frmMain`) delegates conversion to **`ImageConversion`**, batching to **`BatchConversionRunner`**, thumbnails to **`FolderThumbnailLoader`**, and preferences to **`AppSettingsStore`** (**`config.ini`** beside the executable).
 
 ---
 
-## Features (summary)
+## Highlights
 
-| Area | Behavior |
-|------|----------|
-| Formats | Cross-convert within the supported set; ICO read uses the largest embedded frame; ICO write uses one user-selected square size with solid white/black letterboxing. |
-| Workflow | Choose source and destination folders, pick **Convert from** / **Convert to**, select thumbnails, **Convert**; optional **Cancel** during work. |
-| Review | Tile thumbnails, configurable size, refresh, clipboard paste/copy, delete (with undo), Explorer shortcuts, drag-and-drop to set source folder. |
-| Undo | One-slot undo for the last paste, staged delete, or successful batch outputs. |
-| Config | Remembers folders, **Convert to** choice, thumbnail size, window geometry, splitter, ICO options. |
+| Topic | Behavior |
+|-------|----------|
+| Formats | Full cross-convert within the six formats; ICO uses largest frame when reading; writing ICO uses one embedded size + white/black letterbox. |
+| Paths | **`ImageConversion`** rejects identical source and destination paths (same full path). Use a different extension or folder so output differs. Destination cannot be a **drive root** (e.g. `C:\`); paste is blocked for the same case. |
+| UI | Dynamic **Convert** label (**Convert to …**, or **Rebuild icon** when both sides are ICO); optional **Convert from** sync from selection; ICO tiles show **`( icon)`**. |
+| Undo | One undo slot: batch outputs, paste, or staged delete under **`%TEMP%\ImageConverterUndo\`**. |
 
 ---
 
 ## Requirements
 
-- **Windows** (desktop)
-- **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)** or compatible runtime for self-contained deployment
+- **Windows**
+- **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)** to build or `dotnet run`
 
 ---
 
-## Build and run
+## Build
 
 From the repository root:
 
@@ -40,28 +39,28 @@ dotnet build ImageConverter\ImageConverter.csproj -c Release
 dotnet run --project ImageConverter\ImageConverter.csproj
 ```
 
-The executable is produced under `ImageConverter\bin\<Configuration>\net8.0-windows\`. A `config.ini` appears in that output folder after the first save.
+Build output: `ImageConverter\bin\<Configuration>\net8.0-windows\`. Settings file **`config.ini`** appears after first save.
 
 ---
 
-## Repository layout
+## Repository
 
-| Path | Purpose |
-|------|---------|
-| `ImageConverter.sln` | Visual Studio / `dotnet` solution |
-| `ImageConverter/` | WinForms project (source, icon, embedded resources) |
+| Path | Role |
+|------|------|
+| `ImageConverter.sln` | Solution |
+| `ImageConverter/` | Project sources, `ImageConvert.ico` |
 | `ImageConverter/documents/requirements.md` | Product specification |
-| `ImageConverter/documents/plan.md` | Implementation companion and module map |
+| `ImageConverter/documents/plan.md` | Implementation notes |
 
 ---
 
 ## Documentation
 
-- **[Specification](ImageConverter/documents/requirements.md)** — functional scope, UX, ICO rules, configuration keys.  
-- **[Implementation plan](ImageConverter/documents/plan.md)** — UI structure, threading, undo, file responsibilities.
+- [Specification](ImageConverter/documents/requirements.md) — behavior and UX contract.  
+- [Implementation plan](ImageConverter/documents/plan.md) — code structure and algorithms.
 
 ---
 
-## Third-party dependency
+## Dependency
 
-- **[Magick.NET-Q16-AnyCPU](https://www.nuget.org/packages/Magick.NET-Q16-AnyCPU)** (see `ImageConverter.csproj` for the pinned version).
+[NuGet: Magick.NET-Q16-AnyCPU](https://www.nuget.org/packages/Magick.NET-Q16-AnyCPU) — version in `ImageConverter.csproj`.

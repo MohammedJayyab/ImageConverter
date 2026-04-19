@@ -5,7 +5,7 @@ namespace ImageConverter;
 /// <summary>Magick.NET conversion pipeline. Return codes: 0 success, 1 invalid arguments, 2 processing error.</summary>
 internal static class ImageConversion
 {
-    public static int Convert(ConversionRequest request, out string? errorMessage, CancellationToken cancellationToken = default)
+    internal static int Convert(ConversionRequest request, out string? errorMessage, CancellationToken cancellationToken = default)
     {
         errorMessage = null;
         cancellationToken.ThrowIfCancellationRequested();
