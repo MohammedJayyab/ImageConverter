@@ -1403,23 +1403,11 @@ namespace ImageConverter
         /// </summary>
         private void PreviewContextMenuStrip_Opening(object? sender, CancelEventArgs e)
         {
-            toolStripMenuItemPreviewCopy.Visible = false;
-            toolStripMenuItemPreviewPaste.Visible = false;
-            toolStripMenuItemPreviewConvertTo.Visible = false;
-            toolStripMenuItemConvertToQuickIcon.Visible = false;
-            toolStripMenuItemPreviewDelete.Visible = false;
-            toolStripMenuItemOpenSourceLocation.Visible = false;
+            HideAllPreviewContextMenuItems();
 
             var src = contextMenuPreview.SourceControl;
-            if (src == lblPreviewPlaceholder)
+            if (TryOfferPasteOnlyPlaceholderMenu(src, e))
             {
-                toolStripMenuItemPreviewPaste.Visible = true;
-                toolStripMenuItemPreviewPaste.Enabled = Clipboard.ContainsImage();
-                if (!toolStripMenuItemPreviewPaste.Enabled)
-                {
-                    e.Cancel = true;
-                }
-
                 return;
             }
 
@@ -1434,48 +1422,85 @@ namespace ImageConverter
 
             if (hit.Item != null && hit.Item.Selected)
             {
-                toolStripMenuItemPreviewCopy.Visible = true;
-                toolStripMenuItemPreviewConvertTo.Visible = true;
-                toolStripMenuItemPreviewDelete.Visible = true;
-                toolStripMenuItemOpenSourceLocation.Visible = true;
-                toolStripMenuItemPreviewCopy.Enabled = listViewPreview.SelectedItems.Count > 0;
-                toolStripMenuItemPreviewDelete.Enabled = listViewPreview.SelectedItems.Count > 0;
-                toolStripMenuItemOpenSourceLocation.Enabled = listViewPreview.SelectedItems.Count > 0;
-
-                var paths = GetSelectedSourcePaths();
-                var convertOk = CanConvertSelection() && !_conversionBusy;
-                var icoFormatIndex = SupportedFormats.Count - 1;
-                var showQuickConvertToIcon = paths.Exists(p => !SupportedFormats.FormatIndexMatchesExtension(p, icoFormatIndex));
-                toolStripMenuItemConvertToQuickIcon.Visible = showQuickConvertToIcon;
-                toolStripMenuItemConvertToQuickIcon.Enabled = convertOk && showQuickConvertToIcon;
-
-                toolStripMenuItemPreviewConvertTo.DropDownItems.Clear();
-                foreach (var formatIdx in BuildAllowedConvertToFormatIndices(paths))
-                {
-                    var captured = formatIdx;
-                    var sub = new ToolStripMenuItem(SupportedFormatLabels[captured])
-                    {
-                        Enabled = convertOk
-                    };
-                    sub.Click += async (_, _) =>
-                    {
-                        try
-                        {
-                            await ConvertSelectionToFormatAsync(captured, iconQuickAccess: false);
-                        }
-                        catch (Exception ex)
-                        {
-                            SetStatusMessage("Conversion error: " + ex.Message);
-                        }
-                    };
-                    toolStripMenuItemPreviewConvertTo.DropDownItems.Add(sub);
-                }
-
-                toolStripMenuItemPreviewConvertTo.Enabled = convertOk && toolStripMenuItemPreviewConvertTo.DropDownItems.Count > 0;
-
+                PopulatePreviewMenuForSelectedThumbnails();
                 return;
             }
 
+            OfferPasteOnReviewEmptyArea(e);
+        }
+
+        private void HideAllPreviewContextMenuItems()
+        {
+            toolStripMenuItemPreviewCopy.Visible = false;
+            toolStripMenuItemPreviewPaste.Visible = false;
+            toolStripMenuItemPreviewConvertTo.Visible = false;
+            toolStripMenuItemConvertToQuickIcon.Visible = false;
+            toolStripMenuItemPreviewDelete.Visible = false;
+            toolStripMenuItemOpenSourceLocation.Visible = false;
+        }
+
+        /// <returns>True if the placeholder branch handled the menu (caller should return).</returns>
+        private bool TryOfferPasteOnlyPlaceholderMenu(Control? src, CancelEventArgs e)
+        {
+            if (src != lblPreviewPlaceholder)
+            {
+                return false;
+            }
+
+            toolStripMenuItemPreviewPaste.Visible = true;
+            toolStripMenuItemPreviewPaste.Enabled = Clipboard.ContainsImage();
+            if (!toolStripMenuItemPreviewPaste.Enabled)
+            {
+                e.Cancel = true;
+            }
+
+            return true;
+        }
+
+        private void PopulatePreviewMenuForSelectedThumbnails()
+        {
+            toolStripMenuItemPreviewCopy.Visible = true;
+            toolStripMenuItemPreviewConvertTo.Visible = true;
+            toolStripMenuItemPreviewDelete.Visible = true;
+            toolStripMenuItemOpenSourceLocation.Visible = true;
+            toolStripMenuItemPreviewCopy.Enabled = listViewPreview.SelectedItems.Count > 0;
+            toolStripMenuItemPreviewDelete.Enabled = listViewPreview.SelectedItems.Count > 0;
+            toolStripMenuItemOpenSourceLocation.Enabled = listViewPreview.SelectedItems.Count > 0;
+
+            var paths = GetSelectedSourcePaths();
+            var convertOk = CanConvertSelection() && !_conversionBusy;
+            var icoFormatIndex = SupportedFormats.Count - 1;
+            var showQuickConvertToIcon = paths.Exists(p => !SupportedFormats.FormatIndexMatchesExtension(p, icoFormatIndex));
+            toolStripMenuItemConvertToQuickIcon.Visible = showQuickConvertToIcon;
+            toolStripMenuItemConvertToQuickIcon.Enabled = convertOk && showQuickConvertToIcon;
+
+            toolStripMenuItemPreviewConvertTo.DropDownItems.Clear();
+            foreach (var formatIdx in BuildAllowedConvertToFormatIndices(paths))
+            {
+                var captured = formatIdx;
+                var sub = new ToolStripMenuItem(SupportedFormatLabels[captured])
+                {
+                    Enabled = convertOk
+                };
+                sub.Click += async (_, _) =>
+                {
+                    try
+                    {
+                        await ConvertSelectionToFormatAsync(captured, iconQuickAccess: false);
+                    }
+                    catch (Exception ex)
+                    {
+                        SetStatusMessage("Conversion error: " + ex.Message);
+                    }
+                };
+                toolStripMenuItemPreviewConvertTo.DropDownItems.Add(sub);
+            }
+
+            toolStripMenuItemPreviewConvertTo.Enabled = convertOk && toolStripMenuItemPreviewConvertTo.DropDownItems.Count > 0;
+        }
+
+        private void OfferPasteOnReviewEmptyArea(CancelEventArgs e)
+        {
             toolStripMenuItemPreviewPaste.Visible = true;
             toolStripMenuItemPreviewPaste.Enabled = Clipboard.ContainsImage();
             if (!toolStripMenuItemPreviewPaste.Enabled)
