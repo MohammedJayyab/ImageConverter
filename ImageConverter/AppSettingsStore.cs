@@ -48,13 +48,6 @@ internal sealed class AppSettingsStore
                     case "LastDestinationFolder":
                         s.LastDestinationFolder = value;
                         break;
-                    case "DefaultConvertToIndex":
-                        if (int.TryParse(value, out var idx))
-                        {
-                            s.DefaultConvertToIndex = idx;
-                        }
-
-                        break;
                     case "PreviewThumbnailSizeIndex":
                         if (int.TryParse(value, out var psi))
                         {
@@ -141,7 +134,6 @@ internal sealed class AppSettingsStore
         sb.AppendLine("# Image Converter — auto-generated");
         sb.AppendLine($"LastSourceFolder={Escape(settings.LastSourceFolder)}");
         sb.AppendLine($"LastDestinationFolder={Escape(settings.LastDestinationFolder)}");
-        sb.AppendLine($"DefaultConvertToIndex={settings.DefaultConvertToIndex}");
         sb.AppendLine($"PreviewThumbnailSizeIndex={settings.PreviewThumbnailSizeIndex}");
         sb.AppendLine($"MainWindowPlacementSaved={(settings.MainWindowPlacementSaved ? "true" : "false")}");
         sb.AppendLine($"MainWindowLeft={settings.MainWindowLeft.ToString(CultureInfo.InvariantCulture)}");

@@ -7,9 +7,6 @@ internal sealed class AppSettings
 
     public string? LastDestinationFolder { get; set; }
 
-    /// <summary>Index for the main window “Convert to” combo (0..5).</summary>
-    public int DefaultConvertToIndex { get; set; } = 1;
-
     /// <summary>0 = small, 1 = medium, 2 = large preview thumbnails.</summary>
     public int PreviewThumbnailSizeIndex { get; set; } = 1;
 

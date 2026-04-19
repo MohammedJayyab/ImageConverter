@@ -23,17 +23,6 @@ namespace ImageConverter
             "ICO (.ico)"
         ];
 
-        /// <summary>Target name phrase for the Convert button (“&amp;Convert to …”), index aligned with combos.</summary>
-        private static readonly string[] ConvertToButtonTargetPhrases =
-        [
-            "JPEG",
-            "PNG",
-            "BMP",
-            "GIF",
-            "WebP",
-            "icon"
-        ];
-
         /// <summary>Pixel dimensions matching <see cref="cmbIcoOutputSize"/> items (16 … 256).</summary>
         private static readonly int[] IcoOutputSizeValues = [16, 32, 48, 64, 128, 256];
 
@@ -57,11 +46,9 @@ namespace ImageConverter
             base.OnLoad(e);
             _settings = _settingsStore.Load();
             WireEvents();
-            PopulateFormatCombos();
             PopulatePreviewSizeCombo();
             ApplySettingsToUi();
             UpdatePlaceholderVisibility();
-            UpdateConvertAvailability();
             SetStatusMessage("Ready");
             _ = InitialPreviewLoadAsync();
         }
@@ -75,35 +62,15 @@ namespace ImageConverter
         protected override void OnShown(EventArgs e)
         {
             base.OnShown(e);
-            BeginInvoke(() =>
-            {
-                ApplySavedSplitterDistanceOnce();
-                UpdateIcoOutputUi();
-            });
+            BeginInvoke(ApplySavedSplitterDistanceOnce);
         }
 
         private void WireEvents()
         {
             btnBrowseSource.Click += async (_, _) => await BrowseForFolderAsync(isSource: true);
             btnBrowseDest.Click += async (_, _) => await BrowseForFolderAsync(isSource: false);
-            cmbConvertTo.SelectedIndexChanged += (_, _) =>
-            {
-                UpdateIcoOutputUi();
-                UpdateConvertAvailability();
-                if (!_loadingUiSettings)
-                {
-                    SchedulePersistUiSettings();
-                }
-            };
-            cmbConvertFrom.SelectedIndexChanged += (_, _) =>
-            {
-                UpdateConvertAvailability();
-                UpdateIcoOutputUi();
-            };
             listViewPreview.ItemSelectionChanged += (_, _) =>
             {
-                SyncConvertFromToSelectedFiles();
-                UpdateConvertAvailability();
                 RefreshSelectionStatusText();
             };
             btnRefreshPreview.Click += async (_, _) => await ReloadSourcePreviewsAsync();
@@ -113,11 +80,11 @@ namespace ImageConverter
             toolStripMenuItemPreviewPaste.Click += async (_, _) => await PasteClipboardImageIntoSourceFolderAsync();
             toolStripMenuItemPreviewDelete.Click += async (_, _) => await DeleteSelectedPreviewFilesAsync();
             toolStripMenuItemOpenSourceLocation.Click += (_, _) => OpenSelectedSourceFileLocation();
-            toolStripMenuItemPreviewConvertTo.Click += async (_, _) =>
+            toolStripMenuItemConvertToQuickIcon.Click += async (_, _) =>
             {
                 try
                 {
-                    await ConvertSelectedAsync();
+                    await ConvertSelectionToFormatAsync(SupportedFormats.Count - 1, iconQuickAccess: true);
                 }
                 catch (Exception ex)
                 {
@@ -162,44 +129,9 @@ namespace ImageConverter
             lblPreviewPlaceholder.DragEnter += ListViewPreview_DragEnter;
             lblPreviewPlaceholder.DragOver += ListViewPreview_DragOver;
             lblPreviewPlaceholder.DragDrop += async (_, e) => await ListViewPreview_DragDropAsync(e);
-            btnConvert.Click += async (_, _) =>
-            {
-                try
-                {
-                    await ConvertSelectedAsync();
-                }
-                catch (Exception ex)
-                {
-                    SetStatusMessage("Conversion error: " + ex.Message);
-                }
-            };
 
             btnCancel.Click += (_, _) => _conversionCts?.Cancel();
             btnUndo.Click += async (_, _) => await UndoLastOperationAsync();
-        }
-
-        private void PopulateFormatCombos()
-        {
-            cmbConvertFrom.Items.Clear();
-            cmbConvertTo.Items.Clear();
-            foreach (var label in SupportedFormatLabels)
-            {
-                cmbConvertFrom.Items.Add(label);
-                cmbConvertTo.Items.Add(label);
-            }
-
-            if (cmbConvertFrom.Items.Count > 0)
-            {
-                // Default to PNG — common for screenshots/icons; “JPEG first” caused empty filter vs typical folders.
-                var pngFrom = Math.Min(1, cmbConvertFrom.Items.Count - 1);
-                cmbConvertFrom.SelectedIndex = pngFrom;
-            }
-
-            if (cmbConvertTo.Items.Count > 0)
-            {
-                var pngIndex = Math.Min(1, cmbConvertTo.Items.Count - 1);
-                cmbConvertTo.SelectedIndex = pngIndex;
-            }
         }
 
         private void PopulatePreviewSizeCombo()
@@ -235,9 +167,6 @@ namespace ImageConverter
                     }
                 }
 
-                var idx = Math.Clamp(_settings.DefaultConvertToIndex, 0, SupportedFormatLabels.Length - 1);
-                cmbConvertTo.SelectedIndex = idx;
-
                 var previewIdx = Math.Clamp(_settings.PreviewThumbnailSizeIndex, 0, cmbPreviewSize.Items.Count > 0 ? cmbPreviewSize.Items.Count - 1 : 0);
                 if (cmbPreviewSize.Items.Count > 0)
                 {
@@ -268,7 +197,6 @@ namespace ImageConverter
                     WindowState = _settings.MainWindowMaximized ? FormWindowState.Maximized : FormWindowState.Normal;
                 }
 
-                UpdateIcoOutputUi();
             }
             finally
             {
@@ -280,7 +208,6 @@ namespace ImageConverter
         {
             _settings.LastSourceFolder = txtSourceFolder.Text.Trim();
             _settings.LastDestinationFolder = txtDestFolder.Text.Trim();
-            _settings.DefaultConvertToIndex = cmbConvertTo.SelectedIndex >= 0 ? cmbConvertTo.SelectedIndex : 1;
             _settings.PreviewThumbnailSizeIndex = cmbPreviewSize.SelectedIndex >= 0 ? Math.Clamp(cmbPreviewSize.SelectedIndex, 0, 2) : 1;
             _settings.IcoOutputSizeIndex = cmbIcoOutputSize.SelectedIndex >= 0 ? Math.Clamp(cmbIcoOutputSize.SelectedIndex, 0, IcoOutputSizeValues.Length - 1) : 5;
             _settings.SolidColorIndex = cmbSolidColor.SelectedIndex >= 0 ? Math.Clamp(cmbSolidColor.SelectedIndex, 0, 1) : 0;
@@ -470,7 +397,6 @@ namespace ImageConverter
             {
                 txtDestFolder.Text = path;
                 SetStatusMessage("Destination folder selected.");
-                UpdateConvertAvailability();
             }
         }
 
@@ -550,8 +476,6 @@ namespace ImageConverter
             {
                 SetStatusMessage("Drop could not be handled: " + ex.Message);
             }
-
-            UpdateConvertAvailability();
         }
 
         /// <summary>
@@ -631,7 +555,6 @@ namespace ImageConverter
             RunOnUiThread(ClearPreviewList);
             UpdatePlaceholderVisibility();
             SetStatusMessage("Invalid source folder.");
-            UpdateConvertAvailability();
         }
 
         private static Task<List<string>> EnumeratePreviewFilesAsync(string folder, CancellationToken ct)
@@ -656,7 +579,6 @@ namespace ImageConverter
                 listViewPreview.EndUpdate();
                 UpdatePlaceholderVisibility();
                 SetStatusMessage("No supported images in this folder.");
-                UpdateConvertAvailability();
             });
         }
 
@@ -750,9 +672,8 @@ namespace ImageConverter
                 UpdatePlaceholderVisibility();
                 var defaultReady = listViewPreview.Items.Count == 0
                     ? "No images could be previewed."
-                    : $"Ready — {listViewPreview.Items.Count} image(s). Select items to convert.";
+                    : $"Ready — {listViewPreview.Items.Count} image(s). Right-click a thumbnail to convert.";
                 SetStatusMessage(statusOverride ?? defaultReady);
-                UpdateConvertAvailability();
             });
         }
 
@@ -806,36 +727,24 @@ namespace ImageConverter
             }
         }
 
-        /// <summary>Same wording as <see cref="btnConvert"/> and the preview context menu (“&amp;Convert to …”).</summary>
-        private string GetConvertToMenuActionText()
+        /// <summary>Formats that are not redundant for every selected path (omit “convert to same type”).</summary>
+        private static List<int> BuildAllowedConvertToFormatIndices(IReadOnlyList<string> paths)
         {
-            var idx = cmbConvertTo.SelectedIndex;
-            if (idx < 0 || idx >= ConvertToButtonTargetPhrases.Length)
+            var list = new List<int>();
+            for (var i = 0; i < SupportedFormats.Count; i++)
             {
-                return "&Convert";
+                if (paths.Any(p => !SupportedFormats.FormatIndexMatchesExtension(p, i)))
+                {
+                    list.Add(i);
+                }
             }
 
-            var icoIdx = SupportedFormatLabels.Length - 1;
-            // ICO → ICO reapplies canvas size / letterbox; “Convert to icon” sounds redundant when source is already ICO.
-            if (idx == icoIdx && cmbConvertFrom.SelectedIndex == icoIdx)
-            {
-                return "&Rebuild icon";
-            }
-
-            return $"&Convert to {ConvertToButtonTargetPhrases[idx]}";
+            return list;
         }
 
-        /// <summary>Shows ICO hint text and embedded-size checkboxes when output format is ICO.</summary>
-        private void UpdateIcoOutputUi()
+        private static List<string> SelectPathsNeedingTargetFormat(IReadOnlyList<string> paths, int targetFormatIndex)
         {
-            btnConvert.Text = GetConvertToMenuActionText();
-            // AutoSize + designer MinimumSize can leave a stale Size; force layout so the new caption shows.
-            btnConvert.AutoSize = true;
-            btnConvert.PerformLayout();
-            var icoIndex = SupportedFormatLabels.Length - 1;
-            var isIcoOutput = cmbConvertTo.SelectedIndex == icoIndex;
-            lblIcoHint.Visible = isIcoOutput;
-            panelIcoSizes.Visible = isIcoOutput;
+            return paths.Where(p => !SupportedFormats.FormatIndexMatchesExtension(p, targetFormatIndex)).ToList();
         }
 
         /// <summary>Single selected ICO square dimension in pixels.</summary>
@@ -859,9 +768,7 @@ namespace ImageConverter
             }
         }
 
-        /// <summary>
-        /// Per plan §1.6: Convert when paths and formats are valid and at least one preview row is selected.
-        /// </summary>
+        /// <summary>True when source/destination folders exist and at least one thumbnail is selected.</summary>
         private bool CanConvertSelection()
         {
             var pathsOk = !string.IsNullOrWhiteSpace(txtSourceFolder.Text)
@@ -869,57 +776,7 @@ namespace ImageConverter
                 && !string.IsNullOrWhiteSpace(txtDestFolder.Text)
                 && Directory.Exists(txtDestFolder.Text.Trim());
 
-            var formatsOk = cmbConvertFrom.SelectedIndex >= 0 && cmbConvertTo.SelectedIndex >= 0;
-            var hasSelection = listViewPreview.SelectedItems.Count > 0;
-
-            return pathsOk && formatsOk && hasSelection;
-        }
-
-        private void UpdateConvertAvailability()
-        {
-            btnConvert.Enabled = CanConvertSelection();
-        }
-
-        /// <summary>
-        /// Aligns “Convert from” with the current selection so the default (e.g. PNG) does not stay
-        /// set when the selected thumbnail is another type (e.g. JPEG) — avoids spurious “format does not match” prompts.
-        /// When the selection mixes types, the combo is left unchanged.
-        /// </summary>
-        private void SyncConvertFromToSelectedFiles()
-        {
-            if (_loadingUiSettings || cmbConvertFrom.Items.Count == 0)
-            {
-                return;
-            }
-
-            var paths = GetSelectedSourcePaths();
-            if (paths.Count == 0)
-            {
-                return;
-            }
-
-            int? only = null;
-            foreach (var p in paths)
-            {
-                if (!SupportedFormats.TryGetFormatIndexForPath(p, out var idx))
-                {
-                    return;
-                }
-
-                if (only is null)
-                {
-                    only = idx;
-                }
-                else if (only.Value != idx)
-                {
-                    return;
-                }
-            }
-
-            if (only is { } target && cmbConvertFrom.SelectedIndex != target)
-            {
-                cmbConvertFrom.SelectedIndex = target;
-            }
+            return pathsOk && listViewPreview.SelectedItems.Count > 0;
         }
 
         private IconBackgroundKind GetIconBackgroundFromUi()
@@ -930,15 +787,11 @@ namespace ImageConverter
         private void SetConversionBusy(bool busy)
         {
             _conversionBusy = busy;
-            var icoIndex = SupportedFormatLabels.Length - 1;
-            var isIcoOutput = cmbConvertTo.SelectedIndex == icoIndex;
             btnBrowseSource.Enabled = !busy;
             btnBrowseDest.Enabled = !busy;
             txtSourceFolder.Enabled = !busy;
             txtDestFolder.Enabled = !busy;
-            cmbConvertFrom.Enabled = !busy;
-            cmbConvertTo.Enabled = !busy;
-            cmbIcoOutputSize.Enabled = !busy && isIcoOutput;
+            cmbIcoOutputSize.Enabled = !busy;
             cmbSolidColor.Enabled = !busy;
             btnRefreshPreview.Enabled = !busy;
             btnOpenDestination.Enabled = !busy;
@@ -946,17 +799,12 @@ namespace ImageConverter
             listViewPreview.Enabled = !busy;
             UpdateUndoButtonEnabled();
             btnCancel.Enabled = busy;
-            if (busy)
-            {
-                btnConvert.Enabled = false;
-            }
         }
 
-        private async Task ConvertSelectedAsync()
+        /// <param name="iconQuickAccess">When true and target is ICO, convert every selected file (including existing .ico for rebuild).</param>
+        private async Task ConvertSelectionToFormatAsync(int outputFormatIndex, bool iconQuickAccess)
         {
-            SyncConvertFromToSelectedFiles();
-
-            if (!TryValidateConversionFormats(out var fromIndex, out var toIndex))
+            if (outputFormatIndex < 0 || outputFormatIndex >= SupportedFormats.Count)
             {
                 return;
             }
@@ -967,36 +815,40 @@ namespace ImageConverter
                 return;
             }
 
-            if (!TryGetNonEmptyPreviewSelection(out var selectedPaths))
+            var paths = GetSelectedSourcePaths();
+            if (paths.Count == 0)
             {
+                MessageBox.Show(
+                    this,
+                    "Select one or more images in the preview list.",
+                    "Convert",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
                 return;
             }
 
-            if (!TryResolvePathsMatchingConvertFrom(selectedPaths, fromIndex, out var pathsToConvert))
+            List<string> pathsToConvert;
+            var icoIndex = SupportedFormats.Count - 1;
+            if (iconQuickAccess && outputFormatIndex == icoIndex)
             {
-                return;
+                pathsToConvert = paths;
+            }
+            else
+            {
+                pathsToConvert = SelectPathsNeedingTargetFormat(paths, outputFormatIndex);
+                if (pathsToConvert.Count == 0)
+                {
+                    MessageBox.Show(
+                        this,
+                        $"Every selected file is already {SupportedFormatLabels[outputFormatIndex]}. There is nothing to convert.",
+                        "Convert",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information);
+                    return;
+                }
             }
 
-            await RunBatchConversionAndRefreshAsync(pathsToConvert, destFolder, toIndex).ConfigureAwait(true);
-        }
-
-        private bool TryValidateConversionFormats(out int fromIndex, out int toIndex)
-        {
-            fromIndex = cmbConvertFrom.SelectedIndex;
-            toIndex = cmbConvertTo.SelectedIndex;
-            if (fromIndex >= 0 && toIndex >= 0)
-            {
-                return true;
-            }
-
-            MessageBox.Show(
-                this,
-                "Choose valid source and target formats in the Format section.",
-                "Convert",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-            SetStatusMessage("Choose valid source and target formats.");
-            return false;
+            await RunBatchConversionAndRefreshAsync(pathsToConvert, destFolder, outputFormatIndex).ConfigureAwait(true);
         }
 
         private bool EnsureDestinationFolderExists(string destFolder)
@@ -1059,59 +911,6 @@ namespace ImageConverter
             {
                 return false;
             }
-        }
-
-        private bool TryGetNonEmptyPreviewSelection(out List<string> selectedPaths)
-        {
-            selectedPaths = GetSelectedSourcePaths();
-            if (selectedPaths.Count > 0)
-            {
-                return true;
-            }
-
-            MessageBox.Show(
-                this,
-                "Select one or more images in the preview list (click a thumbnail).",
-                "Convert",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-            return false;
-        }
-
-        private bool TryResolvePathsMatchingConvertFrom(
-            IReadOnlyList<string> selectedPaths,
-            int fromIndex,
-            out IReadOnlyList<string> pathsToConvert)
-        {
-            var filtered = selectedPaths.Where(p => SupportedFormats.FormatIndexMatchesExtension(p, fromIndex)).ToList();
-            if (filtered.Count > 0)
-            {
-                pathsToConvert = filtered;
-                return true;
-            }
-
-            var seenExts = string.Join(
-                ", ",
-                selectedPaths.Select(static p => Path.GetExtension(p)).Where(static e => !string.IsNullOrEmpty(e)).Distinct(StringComparer.OrdinalIgnoreCase));
-            var ask = MessageBox.Show(
-                this,
-                $"None of the {selectedPaths.Count} selected file(s) match \"Convert from\" ({SupportedFormatLabels[fromIndex]}).\n\n" +
-                $"Extensions in this selection: {(string.IsNullOrEmpty(seenExts) ? "(unknown)" : seenExts)}\n\n" +
-                "Either change \"Convert from\" to match your files, or convert all selected files anyway.\n\n" +
-                "Convert all selected files now?",
-                "Format does not match selection",
-                MessageBoxButtons.YesNo,
-                MessageBoxIcon.Question,
-                MessageBoxDefaultButton.Button2);
-            if (ask != DialogResult.Yes)
-            {
-                SetStatusMessage("Conversion cancelled — change \"Convert from\" or choose files that match.");
-                pathsToConvert = Array.Empty<string>();
-                return false;
-            }
-
-            pathsToConvert = selectedPaths.ToList();
-            return true;
         }
 
         private async Task ReplaceConversionCancellationAsync()
@@ -1263,7 +1062,6 @@ namespace ImageConverter
                 UseWaitCursor = false;
                 toolStripProgressBatch.Visible = false;
                 SetConversionBusy(false);
-                UpdateConvertAvailability();
             }
 
             if (batchResult is null)
@@ -1577,25 +1375,8 @@ namespace ImageConverter
                 return;
             }
 
-            var paths = GetSelectedSourcePaths();
-            var toIdx = cmbConvertTo.SelectedIndex;
             try
             {
-                if (paths.Count == 1 && toIdx >= 0)
-                {
-                    var outPath = SupportedFormats.BuildDestinationPath(paths[0], destFolder, toIdx);
-                    if (File.Exists(outPath))
-                    {
-                        Process.Start(new ProcessStartInfo
-                        {
-                            FileName = "explorer.exe",
-                            Arguments = "/select,\"" + outPath + "\"",
-                            UseShellExecute = true
-                        });
-                        return;
-                    }
-                }
-
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = destFolder,
@@ -1625,6 +1406,7 @@ namespace ImageConverter
             toolStripMenuItemPreviewCopy.Visible = false;
             toolStripMenuItemPreviewPaste.Visible = false;
             toolStripMenuItemPreviewConvertTo.Visible = false;
+            toolStripMenuItemConvertToQuickIcon.Visible = false;
             toolStripMenuItemPreviewDelete.Visible = false;
             toolStripMenuItemOpenSourceLocation.Visible = false;
 
@@ -1656,11 +1438,41 @@ namespace ImageConverter
                 toolStripMenuItemPreviewConvertTo.Visible = true;
                 toolStripMenuItemPreviewDelete.Visible = true;
                 toolStripMenuItemOpenSourceLocation.Visible = true;
-                toolStripMenuItemPreviewConvertTo.Text = GetConvertToMenuActionText();
                 toolStripMenuItemPreviewCopy.Enabled = listViewPreview.SelectedItems.Count > 0;
-                toolStripMenuItemPreviewConvertTo.Enabled = CanConvertSelection() && !_conversionBusy;
                 toolStripMenuItemPreviewDelete.Enabled = listViewPreview.SelectedItems.Count > 0;
                 toolStripMenuItemOpenSourceLocation.Enabled = listViewPreview.SelectedItems.Count > 0;
+
+                var paths = GetSelectedSourcePaths();
+                var convertOk = CanConvertSelection() && !_conversionBusy;
+                var icoFormatIndex = SupportedFormats.Count - 1;
+                var showQuickConvertToIcon = paths.Exists(p => !SupportedFormats.FormatIndexMatchesExtension(p, icoFormatIndex));
+                toolStripMenuItemConvertToQuickIcon.Visible = showQuickConvertToIcon;
+                toolStripMenuItemConvertToQuickIcon.Enabled = convertOk && showQuickConvertToIcon;
+
+                toolStripMenuItemPreviewConvertTo.DropDownItems.Clear();
+                foreach (var formatIdx in BuildAllowedConvertToFormatIndices(paths))
+                {
+                    var captured = formatIdx;
+                    var sub = new ToolStripMenuItem(SupportedFormatLabels[captured])
+                    {
+                        Enabled = convertOk
+                    };
+                    sub.Click += async (_, _) =>
+                    {
+                        try
+                        {
+                            await ConvertSelectionToFormatAsync(captured, iconQuickAccess: false);
+                        }
+                        catch (Exception ex)
+                        {
+                            SetStatusMessage("Conversion error: " + ex.Message);
+                        }
+                    };
+                    toolStripMenuItemPreviewConvertTo.DropDownItems.Add(sub);
+                }
+
+                toolStripMenuItemPreviewConvertTo.Enabled = convertOk && toolStripMenuItemPreviewConvertTo.DropDownItems.Count > 0;
+
                 return;
             }
 

@@ -2,65 +2,58 @@
 
 **Windows batch image conversion with format preview.**
 
-Desktop utility on **.NET 8** / **Windows**: batch-convert images among **JPEG, PNG, BMP, GIF, WEBP, and ICO** using **Magick.NET**, with a folder **review pane** (thumbnails via **System.Drawing**), ICO-specific options, progress/cancel, and **single-step undo** for recent writes and deletes.
+**.NET 8** Windows Forms app: batch-convert images (**JPEG, PNG, BMP, GIF, WEBP, ICO**) with **Magick.NET**, folder thumbnails (**System.Drawing**), ICO size and letterbox settings, batch **Cancel**, and **single-step undo**.
 
 ---
 
-## Overview
+## How it works
 
-The WinForms shell (`frmMain`) delegates conversion to **`ImageConversion`**, batching to **`BatchConversionRunner`**, thumbnails to **`FolderThumbnailLoader`**, and preferences to **`AppSettingsStore`** (**`config.ini`** beside the executable).
+1. Pick **source** and **destination** folders.
+2. Tune **ICO output size** and **letterbox color** when you plan to export icons.
+3. Select files in the **review** list.
+4. Right-click → **Convert to** → choose a format (the menu omits targets that would change nothing for the current selection), or use **Convert to Icon** for a fast ICO pass (includes rebuilding existing `.ico` files).
+
+There is **no** toolbar **Convert** button—conversion runs from the **context menu** only. The bottom bar has **Undo** and **Cancel** (during work).
 
 ---
 
 ## Highlights
 
-| Topic | Behavior |
-|-------|----------|
-| Formats | Full cross-convert within the six formats; ICO uses largest frame when reading; writing ICO uses one embedded size + white/black letterbox. |
-| Paths | **`ImageConversion`** rejects identical source and destination paths (same full path). Use a different extension or folder so output differs. Destination cannot be a **drive root** (e.g. `C:\`); paste is blocked for the same case. |
-| UI | Dynamic **Convert** label (**Convert to …**, or **Rebuild icon** when both sides are ICO); optional **Convert from** sync from selection; ICO tiles show **`( icon)`**. |
-| Undo | One undo slot: batch outputs, paste, or staged delete under **`%TEMP%\ImageConverterUndo\`**. |
+| Topic | Detail |
+|-------|--------|
+| Paths | **`ImageConversion`** rejects outputs whose path equals the source file path—pick a destination folder so each output gets a distinct path (usually a new extension). |
+| Safety | Destination cannot be a **drive root** (e.g. `C:\`); paste into a drive root is blocked. |
+| Config | **`config.ini`** beside the exe (`AppContext.BaseDirectory`): folders, window geometry, splitter, thumbnail size, ICO size index, letterbox index. No stored last-convert-format. |
 
 ---
 
 ## Requirements
 
 - **Windows**
-- **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)** to build or `dotnet run`
+- **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)** to build / `dotnet run`
 
 ---
 
 ## Build
-
-From the repository root:
 
 ```bash
 dotnet build ImageConverter\ImageConverter.csproj -c Release
 dotnet run --project ImageConverter\ImageConverter.csproj
 ```
 
-Build output: `ImageConverter\bin\<Configuration>\net8.0-windows\`. Settings file **`config.ini`** appears after first save.
+Output: `ImageConverter\bin\<Configuration>\net8.0-windows\`.
 
 ---
 
-## Repository
+## Docs
 
-| Path | Role |
-|------|------|
-| `ImageConverter.sln` | Solution |
-| `ImageConverter/` | Project sources, `ImageConvert.ico` |
-| `ImageConverter/documents/requirements.md` | Product specification |
-| `ImageConverter/documents/plan.md` | Implementation notes |
-
----
-
-## Documentation
-
-- [Specification](ImageConverter/documents/requirements.md) — behavior and UX contract.  
-- [Implementation plan](ImageConverter/documents/plan.md) — code structure and algorithms.
+| File | Content |
+|------|---------|
+| [ImageConverter/documents/requirements.md](ImageConverter/documents/requirements.md) | Full product behavior |
+| [ImageConverter/documents/plan.md](ImageConverter/documents/plan.md) | Implementation map |
 
 ---
 
 ## Dependency
 
-[NuGet: Magick.NET-Q16-AnyCPU](https://www.nuget.org/packages/Magick.NET-Q16-AnyCPU) — version in `ImageConverter.csproj`.
+[NuGet: Magick.NET-Q16-AnyCPU](https://www.nuget.org/packages/Magick.NET-Q16-AnyCPU) — version pinned in `ImageConverter.csproj`.

@@ -51,10 +51,6 @@
             btnBrowseDest = new Button();
             grpFormats = new GroupBox();
             tableLayoutFormats = new TableLayoutPanel();
-            lblConvertFrom = new Label();
-            cmbConvertFrom = new ComboBox();
-            lblConvertTo = new Label();
-            cmbConvertTo = new ComboBox();
             lblIcoHint = new Label();
             panelIcoSizes = new FlowLayoutPanel();
             lblIcoOutputSize = new Label();
@@ -73,6 +69,7 @@
             toolStripMenuItemPreviewCopy = new ToolStripMenuItem();
             toolStripMenuItemPreviewPaste = new ToolStripMenuItem();
             toolStripMenuItemPreviewConvertTo = new ToolStripMenuItem();
+            toolStripMenuItemConvertToQuickIcon = new ToolStripMenuItem();
             toolStripMenuItemPreviewDelete = new ToolStripMenuItem();
             toolStripMenuItemOpenSourceLocation = new ToolStripMenuItem();
             listViewPreview = new ListView();
@@ -80,7 +77,6 @@
             lblPreviewPlaceholder = new Label();
             panelActions = new Panel();
             btnUndo = new Button();
-            btnConvert = new Button();
             btnCancel = new Button();
             statusStripMain.SuspendLayout();
             panelMain.SuspendLayout();
@@ -339,105 +335,46 @@
             grpFormats.Size = new Size(1068, 170);
             grpFormats.TabIndex = 1;
             grpFormats.TabStop = false;
-            grpFormats.Text = "Formats";
+            grpFormats.Text = "Icon output (.ico)";
             // 
             // tableLayoutFormats
             // 
             tableLayoutFormats.AutoSize = true;
-            tableLayoutFormats.ColumnCount = 4;
-            tableLayoutFormats.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 142F));
-            tableLayoutFormats.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutFormats.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 122F));
-            tableLayoutFormats.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            tableLayoutFormats.Controls.Add(lblConvertFrom, 0, 0);
-            tableLayoutFormats.Controls.Add(cmbConvertFrom, 1, 0);
-            tableLayoutFormats.Controls.Add(lblConvertTo, 2, 0);
-            tableLayoutFormats.Controls.Add(cmbConvertTo, 3, 0);
-            tableLayoutFormats.Controls.Add(lblIcoHint, 0, 1);
-            tableLayoutFormats.Controls.Add(panelIcoSizes, 0, 2);
+            tableLayoutFormats.ColumnCount = 1;
+            tableLayoutFormats.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            tableLayoutFormats.Controls.Add(lblIcoHint, 0, 0);
+            tableLayoutFormats.Controls.Add(panelIcoSizes, 0, 1);
             tableLayoutFormats.Dock = DockStyle.Fill;
             tableLayoutFormats.Location = new Point(10, 35);
             tableLayoutFormats.Margin = new Padding(3, 4, 3, 4);
             tableLayoutFormats.Name = "tableLayoutFormats";
-            tableLayoutFormats.RowCount = 3;
-            tableLayoutFormats.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
-            tableLayoutFormats.RowStyles.Add(new RowStyle());
-            tableLayoutFormats.RowStyles.Add(new RowStyle());
+            tableLayoutFormats.RowCount = 2;
+            tableLayoutFormats.RowStyles.Add(new RowStyle(SizeType.AutoSize));
+            tableLayoutFormats.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             tableLayoutFormats.Size = new Size(1048, 124);
             tableLayoutFormats.TabIndex = 0;
-            // 
-            // lblConvertFrom
-            // 
-            lblConvertFrom.Anchor = AnchorStyles.Left;
-            lblConvertFrom.AutoSize = true;
-            lblConvertFrom.Location = new Point(3, 9);
-            lblConvertFrom.Margin = new Padding(3, 0, 6, 0);
-            lblConvertFrom.Name = "lblConvertFrom";
-            lblConvertFrom.Size = new Size(118, 25);
-            lblConvertFrom.TabIndex = 0;
-            lblConvertFrom.Text = "Convert from";
-            // 
-            // cmbConvertFrom
-            // 
-            cmbConvertFrom.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-            cmbConvertFrom.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbConvertFrom.FormattingEnabled = true;
-            cmbConvertFrom.Location = new Point(145, 5);
-            cmbConvertFrom.Margin = new Padding(3, 4, 10, 4);
-            cmbConvertFrom.Name = "cmbConvertFrom";
-            cmbConvertFrom.Size = new Size(379, 33);
-            cmbConvertFrom.TabIndex = 1;
-            // 
-            // lblConvertTo
-            // 
-            lblConvertTo.Anchor = AnchorStyles.Left;
-            lblConvertTo.AutoSize = true;
-            lblConvertTo.Location = new Point(537, 9);
-            lblConvertTo.Margin = new Padding(3, 0, 6, 0);
-            lblConvertTo.Name = "lblConvertTo";
-            lblConvertTo.Size = new Size(96, 25);
-            lblConvertTo.TabIndex = 2;
-            lblConvertTo.Text = "Convert to";
-            // 
-            // cmbConvertTo
-            // 
-            cmbConvertTo.Anchor = AnchorStyles.Left | AnchorStyles.Right;
-            cmbConvertTo.DropDownStyle = ComboBoxStyle.DropDownList;
-            cmbConvertTo.FormattingEnabled = true;
-            cmbConvertTo.Location = new Point(659, 5);
-            cmbConvertTo.Margin = new Padding(3, 4, 3, 4);
-            cmbConvertTo.Name = "cmbConvertTo";
-            cmbConvertTo.Size = new Size(386, 33);
-            cmbConvertTo.TabIndex = 3;
             // 
             // lblIcoHint
             // 
             lblIcoHint.AutoSize = true;
-            tableLayoutFormats.SetColumnSpan(lblIcoHint, 4);
+            lblIcoHint.Dock = DockStyle.Fill;
             lblIcoHint.ForeColor = SystemColors.GrayText;
-            lblIcoHint.Location = new Point(3, 48);
             lblIcoHint.Margin = new Padding(3, 4, 3, 0);
             lblIcoHint.Name = "lblIcoHint";
-            lblIcoHint.Size = new Size(431, 25);
-            lblIcoHint.TabIndex = 4;
-            lblIcoHint.Text = "ICO output uses one embedded size (choose below).";
-            lblIcoHint.Visible = false;
+            lblIcoHint.TabIndex = 0;
+            lblIcoHint.Text = "These settings apply when you convert to ICO from the thumbnail menu.";
             // 
             // panelIcoSizes
             // 
             panelIcoSizes.AutoSize = true;
             panelIcoSizes.AutoSizeMode = AutoSizeMode.GrowAndShrink;
-            tableLayoutFormats.SetColumnSpan(panelIcoSizes, 4);
             panelIcoSizes.Controls.Add(lblIcoOutputSize);
             panelIcoSizes.Controls.Add(cmbIcoOutputSize);
             panelIcoSizes.Dock = DockStyle.Fill;
-            panelIcoSizes.Location = new Point(3, 75);
             panelIcoSizes.Margin = new Padding(3, 2, 3, 0);
             panelIcoSizes.Name = "panelIcoSizes";
             panelIcoSizes.Padding = new Padding(0, 2, 0, 6);
-            panelIcoSizes.Size = new Size(1042, 49);
-            panelIcoSizes.TabIndex = 5;
-            panelIcoSizes.Visible = false;
+            panelIcoSizes.TabIndex = 1;
             panelIcoSizes.WrapContents = false;
             // 
             // lblIcoOutputSize
@@ -563,7 +500,7 @@
             // 
             // contextMenuPreview
             // 
-            contextMenuPreview.Items.AddRange(new ToolStripItem[] { toolStripMenuItemPreviewCopy, toolStripMenuItemPreviewConvertTo, toolStripMenuItemPreviewDelete, toolStripMenuItemOpenSourceLocation, toolStripMenuItemPreviewPaste });
+            contextMenuPreview.Items.AddRange(new ToolStripItem[] { toolStripMenuItemPreviewCopy, toolStripMenuItemPreviewConvertTo, toolStripMenuItemConvertToQuickIcon, toolStripMenuItemPreviewDelete, toolStripMenuItemOpenSourceLocation, toolStripMenuItemPreviewPaste });
             contextMenuPreview.Name = "contextMenuPreview";
             // 
             // toolStripMenuItemPreviewCopy
@@ -577,8 +514,15 @@
             // 
             toolStripMenuItemPreviewConvertTo.Name = "toolStripMenuItemPreviewConvertTo";
             toolStripMenuItemPreviewConvertTo.Size = new Size(224, 32);
-            toolStripMenuItemPreviewConvertTo.Text = "&Convert to…";
+            toolStripMenuItemPreviewConvertTo.Text = "&Convert to";
             toolStripMenuItemPreviewConvertTo.Visible = false;
+            // 
+            // toolStripMenuItemConvertToQuickIcon
+            // 
+            toolStripMenuItemConvertToQuickIcon.Name = "toolStripMenuItemConvertToQuickIcon";
+            toolStripMenuItemConvertToQuickIcon.Size = new Size(224, 32);
+            toolStripMenuItemConvertToQuickIcon.Text = "Convert to &Icon";
+            toolStripMenuItemConvertToQuickIcon.Visible = false;
             // 
             // toolStripMenuItemPreviewPaste
             // 
@@ -663,7 +607,6 @@
             // panelActions
             // 
             panelActions.Controls.Add(btnUndo);
-            panelActions.Controls.Add(btnConvert);
             panelActions.Controls.Add(btnCancel);
             panelActions.Dock = DockStyle.Fill;
             panelActions.Location = new Point(0, 611);
@@ -685,29 +628,16 @@
             btnUndo.Text = "&Undo";
             btnUndo.UseVisualStyleBackColor = true;
             // 
-            // btnConvert
-            // 
-            btnConvert.AutoSize = true;
-            btnConvert.Enabled = false;
-            btnConvert.Location = new Point(118, 12);
-            btnConvert.Margin = new Padding(3, 4, 16, 4);
-            btnConvert.MinimumSize = new Size(190, 38);
-            btnConvert.Name = "btnConvert";
-            btnConvert.Size = new Size(190, 38);
-            btnConvert.TabIndex = 1;
-            btnConvert.Text = "&Convert";
-            btnConvert.UseVisualStyleBackColor = true;
-            // 
             // btnCancel
             // 
             btnCancel.AutoSize = true;
             btnCancel.Enabled = false;
-            btnCancel.Location = new Point(324, 12);
+            btnCancel.Location = new Point(118, 12);
             btnCancel.Margin = new Padding(3, 4, 3, 4);
             btnCancel.MinimumSize = new Size(120, 38);
             btnCancel.Name = "btnCancel";
             btnCancel.Size = new Size(120, 38);
-            btnCancel.TabIndex = 2;
+            btnCancel.TabIndex = 1;
             btnCancel.Text = "Ca&ncel";
             btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -780,10 +710,6 @@
         private Button btnBrowseDest;
         private GroupBox grpFormats;
         private TableLayoutPanel tableLayoutFormats;
-        private Label lblConvertFrom;
-        private ComboBox cmbConvertFrom;
-        private Label lblConvertTo;
-        private ComboBox cmbConvertTo;
         private Label lblIcoHint;
         private FlowLayoutPanel panelIcoSizes;
         private Label lblIcoOutputSize;
@@ -801,6 +727,7 @@
         private ContextMenuStrip contextMenuPreview;
         private ToolStripMenuItem toolStripMenuItemPreviewCopy;
         private ToolStripMenuItem toolStripMenuItemPreviewConvertTo;
+        private ToolStripMenuItem toolStripMenuItemConvertToQuickIcon;
         private ToolStripMenuItem toolStripMenuItemPreviewPaste;
         private ToolStripMenuItem toolStripMenuItemPreviewDelete;
         private ToolStripMenuItem toolStripMenuItemOpenSourceLocation;
@@ -809,7 +736,6 @@
         private Label lblPreviewPlaceholder;
         private Panel panelActions;
         private Button btnUndo;
-        private Button btnConvert;
         private Button btnCancel;
     }
 }
