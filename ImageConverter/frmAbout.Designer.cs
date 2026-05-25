@@ -80,7 +80,7 @@
             txtAbout.ScrollBars = ScrollBars.Vertical;
             txtAbout.Size = new Size(446, 218);
             txtAbout.TabIndex = 2;
-            txtAbout.Text = "Image Converter V1.0\r\n\r\nDeveloped by: Mohammed Jayyab\r\nhttps://github.com/MohammedJayyab\r\n\r\nEmail: moh.abujiab@gmail.com\r\n\r\nIf this app helps you, consider buying me a coffee.";
+            txtAbout.Text = $"Image Converter V{AppInfo.VersionDisplay}\r\n\r\nDeveloped by: Mohammed Jayyab\r\nhttps://github.com/MohammedJayyab\r\n\r\nEmail: moh.abujiab@gmail.com\r\n\r\nIf this app helps you, consider buying me a coffee.";
             // 
             // frmAbout
             // 

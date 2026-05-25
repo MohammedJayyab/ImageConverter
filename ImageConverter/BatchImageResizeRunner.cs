@@ -6,7 +6,7 @@ internal static class BatchImageResizeRunner
 
     internal static RunResult Run(
         IReadOnlyList<string> sourcePaths,
-        int scaleFactor,
+        double scaleFactor,
         CancellationToken cancellationToken,
         IProgress<(int Current, int Total, string FileName)>? progress = null)
     {

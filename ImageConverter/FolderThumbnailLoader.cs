@@ -7,11 +7,6 @@ namespace ImageConverter;
 
 internal static class FolderThumbnailLoader
 {
-    private static readonly HashSet<string> SupportedExtensions = new(StringComparer.OrdinalIgnoreCase)
-    {
-        ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp", ".ico", ".svg", ".pdf"
-    };
-
     private static readonly HashSet<string> GdiPreferredExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
         ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".ico"
@@ -27,7 +22,7 @@ internal static class FolderThumbnailLoader
         try
         {
             return Directory.EnumerateFiles(folderPath)
-                .Where(f => SupportedExtensions.Contains(Path.GetExtension(f)))
+                .Where(SupportedFormats.IsPreviewFile)
                 .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
                 .ToList();
         }

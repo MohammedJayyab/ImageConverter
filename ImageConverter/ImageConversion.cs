@@ -125,6 +125,7 @@ internal static class ImageConversion
         img.Format = outFmt;
         ApplyQualityHints(img, outFmt);
         ApplyOutputBackground(img, outFmt, request.IconBackground);
+        ApplyTransparentWriteSettings(img, outFmt, request.IconBackground);
         img.Write(request.DestinationPath);
         return 0;
     }
@@ -244,13 +245,86 @@ internal static class ImageConversion
 
     private static void PreserveTransparentBackground(MagickImage img)
     {
-        if (img.HasAlpha)
+        if (!img.HasAlpha)
+        {
+            img.Alpha(AlphaOption.Set);
+        }
+
+        if (TryMakeUniformBorderTransparent(img))
         {
             return;
         }
 
         img.ColorFuzz = new Percentage(12);
         img.Transparent(MagickColors.White);
+    }
+
+    private static bool TryMakeUniformBorderTransparent(MagickImage img)
+    {
+        var bg = TryDetectUniformBorderBackground(img);
+        if (bg is null)
+        {
+            return false;
+        }
+
+        img.ColorFuzz = new Percentage(14);
+        img.Transparent(bg);
+        return true;
+    }
+
+    private static MagickColor? TryDetectUniformBorderBackground(MagickImage img)
+    {
+        var w = (int)img.Width;
+        var h = (int)img.Height;
+        if (w < 2 || h < 2)
+        {
+            return null;
+        }
+
+        using var pixels = img.GetPixels();
+        var samples = new List<MagickColor>
+        {
+            ReadPixelAsMagickColor(pixels, 0, 0),
+            ReadPixelAsMagickColor(pixels, w - 1, 0),
+            ReadPixelAsMagickColor(pixels, 0, h - 1),
+            ReadPixelAsMagickColor(pixels, w - 1, h - 1)
+        };
+
+        if (w > 8)
+        {
+            samples.Add(ReadPixelAsMagickColor(pixels, w / 2, 0));
+            samples.Add(ReadPixelAsMagickColor(pixels, w / 2, h - 1));
+        }
+
+        if (h > 8)
+        {
+            samples.Add(ReadPixelAsMagickColor(pixels, 0, h / 2));
+            samples.Add(ReadPixelAsMagickColor(pixels, w - 1, h / 2));
+        }
+
+        var reference = samples[0];
+        var fuzz = new Percentage(8);
+        return samples.All(c => c.FuzzyEquals(reference, fuzz)) ? reference : null;
+    }
+
+    private static MagickColor ReadPixelAsMagickColor(IPixelCollection<ushort> pixels, int x, int y)
+    {
+        var color = pixels.GetPixel(x, y).ToColor();
+        return new MagickColor(color ?? MagickColors.White);
+    }
+
+    private static void ApplyTransparentWriteSettings(MagickImage img, MagickFormat fmt, IconBackgroundKind background)
+    {
+        if (background != IconBackgroundKind.Transparent)
+        {
+            return;
+        }
+
+        if (fmt == MagickFormat.Png)
+        {
+            img.Settings.SetDefine(MagickFormat.Png, "format", "png32");
+            img.ColorType = ColorType.TrueColorAlpha;
+        }
     }
 
     private static void FlattenIfNeededForOpaque(MagickImage img, MagickFormat fmt)

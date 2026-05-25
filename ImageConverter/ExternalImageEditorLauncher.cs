@@ -15,8 +15,7 @@ internal static class ExternalImageEditorLauncher
             return TryStartEditor(exe, imagePath, out errorMessage);
         }
 
-        return TryStartEditorOnPath("mspaint.exe", imagePath, out errorMessage,
-            "Microsoft Paint was not found on this PC.");
+        return TryStartProcess("mspaint.exe", imagePath, out errorMessage, "Microsoft Paint was not found on this PC.");
     }
 
     internal static bool TryOpenWithPaintDotNet(string imagePath, out string? errorMessage)
@@ -31,37 +30,14 @@ internal static class ExternalImageEditorLauncher
         return TryStartEditor(exe, imagePath, out errorMessage);
     }
 
-    private static bool TryStartEditor(string editorExecutable, string imagePath, out string? errorMessage)
-    {
-        errorMessage = null;
-        if (!File.Exists(imagePath))
-        {
-            errorMessage = "The selected file was not found on disk.";
-            return false;
-        }
+    private static bool TryStartEditor(string editorExecutable, string imagePath, out string? errorMessage) =>
+        TryStartProcess(editorExecutable, imagePath, out errorMessage);
 
-        try
-        {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = editorExecutable,
-                Arguments = $"\"{imagePath}\"",
-                UseShellExecute = true
-            });
-            return true;
-        }
-        catch (Exception ex)
-        {
-            errorMessage = ex.Message;
-            return false;
-        }
-    }
-
-    private static bool TryStartEditorOnPath(
-        string executableName,
+    private static bool TryStartProcess(
+        string executable,
         string imagePath,
         out string? errorMessage,
-        string notFoundMessage)
+        string? failurePrefix = null)
     {
         errorMessage = null;
         if (!File.Exists(imagePath))
@@ -74,7 +50,7 @@ internal static class ExternalImageEditorLauncher
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = executableName,
+                FileName = executable,
                 Arguments = $"\"{imagePath}\"",
                 UseShellExecute = true
             });
@@ -82,7 +58,7 @@ internal static class ExternalImageEditorLauncher
         }
         catch (Exception ex)
         {
-            errorMessage = notFoundMessage + " " + ex.Message;
+            errorMessage = failurePrefix is null ? ex.Message : $"{failurePrefix} {ex.Message}";
             return false;
         }
     }

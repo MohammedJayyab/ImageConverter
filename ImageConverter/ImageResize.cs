@@ -4,16 +4,12 @@ namespace ImageConverter;
 
 internal static class ImageResize
 {
-    private static readonly string[] ResizableExtensions =
-    [
-        ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp", ".ico"
-    ];
+    internal static readonly double[] SupportedScaleFactors = [0.5, 0.75, 2, 4];
 
-    internal static bool IsResizablePath(string filePath)
-    {
-        var ext = Path.GetExtension(filePath);
-        return ResizableExtensions.Any(e => ext.Equals(e, StringComparison.OrdinalIgnoreCase));
-    }
+    internal static bool IsSupportedScaleFactor(double scaleFactor) =>
+        SupportedScaleFactors.Any(s => Math.Abs(s - scaleFactor) < 0.001);
+
+    internal static bool IsResizablePath(string filePath) => SupportedFormats.IsResizableFile(filePath);
 
     internal static string BuildScaledOutputPath(string sourcePath) =>
         Path.Combine(
@@ -23,16 +19,16 @@ internal static class ImageResize
     internal static int Scale(
         string sourcePath,
         string destinationPath,
-        int scaleFactor,
+        double scaleFactor,
         CancellationToken cancellationToken,
         out string? errorMessage)
     {
         errorMessage = null;
         cancellationToken.ThrowIfCancellationRequested();
 
-        if (scaleFactor is not (2 or 4))
+        if (!IsSupportedScaleFactor(scaleFactor))
         {
-            errorMessage = "Scale factor must be 2 or 4.";
+            errorMessage = "Scale factor must be 0.5, 0.75, 2, or 4.";
             return 1;
         }
 
@@ -60,13 +56,8 @@ internal static class ImageResize
         {
             cancellationToken.ThrowIfCancellationRequested();
             using var img = new MagickImage(sourcePath);
-            var newWidth = img.Width * (uint)scaleFactor;
-            var newHeight = img.Height * (uint)scaleFactor;
-            if (newWidth == 0 || newHeight == 0)
-            {
-                errorMessage = "Image dimensions are too small to scale.";
-                return 1;
-            }
+            var newWidth = (uint)Math.Max(1, (int)Math.Round(img.Width * scaleFactor));
+            var newHeight = (uint)Math.Max(1, (int)Math.Round(img.Height * scaleFactor));
 
             img.FilterType = FilterType.Lanczos;
             img.Resize(newWidth, newHeight);

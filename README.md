@@ -4,7 +4,7 @@ Windows batch image converter with a folder **review** pane. Built with **.NET 8
 
 Licensed under the [MIT License](LICENSE).
 
-![Image Converter](image.png)
+![Image Converter main window — folder review, convert and resize context menu, canvas background and ICO size settings](images/image.png)
 
 ## Quick start
 
@@ -18,7 +18,7 @@ Converted files are written **into the same folder** (same name, new extension) 
 
 ## Menus
 
-**File** — Open folder (Ctrl+O) · Refresh review (F5) · Open folder in Explorer · Paste image (Ctrl+V) · Undo (Ctrl+Z) · Exit
+**File** — Open folder (Ctrl+O), Refresh review (F5) | Open image folder in Explorer, Open application folder in Explorer | Paste image (Ctrl+V), Undo (Ctrl+Z) | Exit
 
 **Help** — How to use (guide loaded from `HelpHowToUse.rtf`) · Support the developer · About
 
@@ -27,7 +27,7 @@ Converted files are written **into the same folder** (same name, new extension) 
 **JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF**
 
 - **ICO** — square size 16–256 px; white, black, or transparent letterbox; largest frame when reading multi-size icons.
-- **Transparent background** — choose **Transparent** in the background dropdown for PNG, GIF, WEBP, ICO, and SVG (preserves alpha; on opaque images, near-white areas are keyed out).
+- **Transparent background** — choose **Transparent (preserve alpha)** for PNG, GIF, WEBP, ICO, and SVG. Keeps existing transparency; on opaque images with a **uniform border color** (e.g. white or green screen edges), that color is keyed out. This is **not** AI background removal for busy photo backgrounds.
 - **SVG** — see [SVG output](#svg-output) below (embedded image, not vector tracing).
 - **PDF** — single-page raster image via ImageMagick.
 
@@ -58,7 +58,7 @@ So the result is a **`.svg` wrapper around a raster image** — same pixels as a
 
 ## Context menu
 
-**Convert to Icon** · **Convert to** (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF) · **Resize** (2× or 4×, saves as `name_scaled.ext`) · Copy · Copy image path · Rename · Delete · Open file location · Open by Paint · Open by Paint.NET
+**Convert to Icon** · **Convert to** (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF) · **Resize** (0.5×, 0.75×, 2×, or 4×, saves as `name_scaled.ext`) · Copy · Copy image path · Rename · Delete · Open file location · Open by Paint · Open by Paint.NET
 
 Existing output files trigger an overwrite prompt. The **Convert to** submenu skips formats the selection already uses.
 
@@ -73,7 +73,7 @@ If you find this project helpful, consider buying me a coffee to support its dev
 ## Notes
 
 - The image folder must not be a drive root (e.g. `C:\`).
-- Settings persist in **`config.ini`** next to the executable (folder path, window layout, thumbnail size, ICO options).
+- Settings persist in **`%AppData%\Image Converter\config.ini`** (folder path, window layout, thumbnail size, ICO options).
 - **`HelpHowToUse.rtf`** is copied to the output folder on build; edit it in the project to change the Help guide.
 - Depends on [Magick.NET-Q16-AnyCPU](https://www.nuget.org/packages/Magick.NET-Q16-AnyCPU).
 
@@ -86,4 +86,12 @@ dotnet build ImageConverter\ImageConverter.csproj -c Release
 dotnet run --project ImageConverter\ImageConverter.csproj
 ```
 
-Built app: `ImageConverter\bin\<Configuration>\net8.0-windows\` (includes `HelpHowToUse.rtf`).
+For a self-contained Windows installer payload (no separate .NET runtime required on the target PC), run:
+
+```bash
+dotnet publish ImageConverter\ImageConverter.csproj -c Release -r win-x64 --self-contained true
+```
+
+Output: `ImageConverter\bin\Release\net8.0-windows\win-x64\publish\` (includes `HelpHowToUse.rtf` and `images\splash_screen.png`).
+
+Built app (framework-dependent): `ImageConverter\bin\<Configuration>\net8.0-windows\`.

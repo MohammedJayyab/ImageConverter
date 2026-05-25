@@ -12,6 +12,53 @@ internal static class SupportedFormats
 
     private static readonly string[] FileExtensions = [".jpg", ".png", ".bmp", ".gif", ".webp", ".ico", ".svg", ".pdf"];
 
+    private static readonly string[] FormatLabels =
+    [
+        "JPEG (.jpg / .jpeg)",
+        "PNG (.png)",
+        "BMP (.bmp)",
+        "GIF (.gif)",
+        "WEBP (.webp)",
+        "ICO (.ico)",
+        "SVG (.svg)",
+        "PDF (.pdf)"
+    ];
+
+    private static readonly HashSet<string> PreviewExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp", ".ico", ".svg", ".pdf"
+    };
+
+    private static readonly HashSet<string> ResizableExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp", ".ico"
+    };
+
+    internal static string GetFormatLabel(int formatIndex)
+    {
+        if (formatIndex < 0 || formatIndex >= FormatLabels.Length)
+        {
+            return "Unknown";
+        }
+
+        return FormatLabels[formatIndex];
+    }
+
+    internal static bool SupportsTransparency(int formatIndex) =>
+        formatIndex is 1 or 3 or 4 or 5 or 6;
+
+    internal static bool IsPreviewFile(string filePath)
+    {
+        var ext = Path.GetExtension(filePath);
+        return !string.IsNullOrEmpty(ext) && PreviewExtensions.Contains(ext);
+    }
+
+    internal static bool IsResizableFile(string filePath)
+    {
+        var ext = Path.GetExtension(filePath);
+        return !string.IsNullOrEmpty(ext) && ResizableExtensions.Contains(ext);
+    }
+
     internal static string GetFileExtension(int formatIndex)
     {
         if (formatIndex < 0 || formatIndex >= Count)
