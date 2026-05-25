@@ -92,6 +92,6 @@ For a self-contained Windows installer payload (no separate .NET runtime require
 dotnet publish ImageConverter\ImageConverter.csproj -c Release -r win-x64 --self-contained true
 ```
 
-Output: `ImageConverter\bin\Release\net8.0-windows\win-x64\publish\` (includes `HelpHowToUse.rtf` and `images\splash_screen.png`).
+Output: `ImageConverter\bin\Release\net8.0-windows\win-x64\publish\` (includes `HelpHowToUse.rtf` and `images\splash_screen.png`). After publish, extra files in the parent `win-x64` folder are removed automatically (only `publish\` remains).
 
 Built app (framework-dependent): `ImageConverter\bin\<Configuration>\net8.0-windows\`.

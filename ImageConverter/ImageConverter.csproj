@@ -27,4 +27,14 @@
     <Content Include="ImageConverter.ico" />
   </ItemGroup>
 
+  <!-- After self-contained publish, remove duplicate build output in win-x64; keep only the publish folder. -->
+  <Target Name="CleanupWinX64AfterPublish" AfterTargets="Publish" Condition="'$(SelfContained)' == 'true' AND '$(RuntimeIdentifier)' == 'win-x64'">
+    <PropertyGroup>
+      <_WinX64Root>$(MSBuildProjectDirectory)\bin\$(Configuration)\$(TargetFramework)\win-x64</_WinX64Root>
+      <_PublishSubdir>publish</_PublishSubdir>
+    </PropertyGroup>
+    <Message Importance="high" Text="Cleaning $(_WinX64Root) (keeping $(_PublishSubdir)\ only)..." />
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\cleanup-after-publish.ps1&quot; -RidRoot &quot;$(_WinX64Root)&quot; -KeepFolder &quot;$(_PublishSubdir)&quot;" />
+  </Target>
+
 </Project>
