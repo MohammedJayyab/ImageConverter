@@ -1,59 +1,63 @@
 # Image Converter
 
-**Windows batch image conversion with format preview.**
+Windows batch image converter with a folder **review** pane. Built with **.NET 8** WinForms and **Magick.NET**.
 
-**.NET 8** Windows Forms app: batch-convert images (**JPEG, PNG, BMP, GIF, WEBP, ICO**) with **Magick.NET**, folder thumbnails (**System.Drawing**), ICO size and letterbox settings, batch **Cancel**, and **single-step undo**.
+Licensed under the [MIT License](LICENSE).
 
----
+![Image Converter](image.png)
 
-## How it works
+## Quick start
 
-1. Pick **source** and **destination** folders.
-2. Tune **ICO output size** and **letterbox color** when you plan to export icons.
-3. Select files in the **review** list.
-4. Right-click → **Convert to** → choose a format (the menu omits targets that would change nothing for the current selection), or use **Convert to Icon** for a fast ICO pass (includes rebuilding existing `.ico` files).
+1. Choose an **image folder** (Browse, **File → Open folder**, or drag a folder onto the review list).
+2. Select images in the review list.
+3. Right-click → **Convert to** (or **Convert to Icon** for ICO).
 
-There is **no** toolbar **Convert** button—conversion runs from the **context menu** only. The bottom bar has **Undo** and **Cancel** (during work).
+Conversion runs from the **context menu** (there is no main Convert button). Use **Undo** / **Cancel** on the bottom bar while a batch runs.
 
----
+Converted files are written **into the same folder** (same name, new extension) and appear in the list automatically.
 
-## Highlights
+## Menus
 
-| Topic | Detail |
-|-------|--------|
-| Paths | **`ImageConversion`** rejects outputs whose path equals the source file path—pick a destination folder so each output gets a distinct path (usually a new extension). |
-| Safety | Destination cannot be a **drive root** (e.g. `C:\`); paste into a drive root is blocked. |
-| Config | **`config.ini`** beside the exe (`AppContext.BaseDirectory`): folders, window geometry, splitter, thumbnail size, ICO size index, letterbox index. No stored last-convert-format. |
+**File** — Open folder (Ctrl+O) · Refresh review (F5) · Open folder in Explorer · Paste image (Ctrl+V) · Undo (Ctrl+Z) · Exit
 
----
+**Help** — How to use (guide loaded from `HelpHowToUse.rtf`) · About
 
-## Requirements
+## Formats
 
-- **Windows**
-- **[.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)** to build / `dotnet run`
+**JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF**
 
----
+- **ICO** — square size 16–256 px; white or black letterbox; largest frame when reading multi-size icons.
+- **SVG** — embedded PNG (not vector tracing).
+- **PDF** — single-page image via ImageMagick.
+
+## Review list
+
+- Thumbnails with filename underneath; size: small / medium / large.
+- **F5** or **Refresh review** to reload.
+- **F2** or context menu **Rename** (dialog).
+- Status bar: name, size, dimensions, last modified.
+- **Ctrl+C** — copy path; **Ctrl+V** / **Ctrl+P** — paste image into the folder.
+
+## Context menu
+
+**Convert to Icon** · **Convert to** (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF) · Copy · Copy image path · Rename · Delete · Open file location · Open by Paint · Open by Paint.NET
+
+Existing output files trigger an overwrite prompt. The **Convert to** submenu skips formats the selection already uses.
+
+## Notes
+
+- The image folder must not be a drive root (e.g. `C:\`).
+- Settings persist in **`config.ini`** next to the executable (folder path, window layout, thumbnail size, ICO options).
+- **`HelpHowToUse.rtf`** is copied to the output folder on build; edit it in the project to change the Help guide.
+- Depends on [Magick.NET-Q16-AnyCPU](https://www.nuget.org/packages/Magick.NET-Q16-AnyCPU).
 
 ## Build
+
+**Requires:** Windows, [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 
 ```bash
 dotnet build ImageConverter\ImageConverter.csproj -c Release
 dotnet run --project ImageConverter\ImageConverter.csproj
 ```
 
-Output: `ImageConverter\bin\<Configuration>\net8.0-windows\`.
-
----
-
-## Docs
-
-| File | Content |
-|------|---------|
-| [ImageConverter/documents/requirements.md](ImageConverter/documents/requirements.md) | Full product behavior |
-| [ImageConverter/documents/plan.md](ImageConverter/documents/plan.md) | Implementation map |
-
----
-
-## Dependency
-
-[NuGet: Magick.NET-Q16-AnyCPU](https://www.nuget.org/packages/Magick.NET-Q16-AnyCPU) — version pinned in `ImageConverter.csproj`.
+Built app: `ImageConverter\bin\<Configuration>\net8.0-windows\` (includes `HelpHowToUse.rtf`).

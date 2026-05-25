@@ -10,6 +10,10 @@
 *.userosscache
 *.sln.docstates
 
+# App runtime settings (folder paths, window layout — local only)
+config.ini
+**/config.ini
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 

@@ -3,7 +3,6 @@ using System.Text;
 
 namespace ImageConverter;
 
-/// <summary>Minimal INI-style key=value store for <c>config.ini</c> (no extra NuGet packages).</summary>
 internal sealed class AppSettingsStore
 {
     private readonly string _filePath;
@@ -42,11 +41,16 @@ internal sealed class AppSettingsStore
 
                 switch (key)
                 {
+                    case "LastFolder":
                     case "LastSourceFolder":
-                        s.LastSourceFolder = value;
+                        s.LastFolder = value;
                         break;
                     case "LastDestinationFolder":
-                        s.LastDestinationFolder = value;
+                        if (string.IsNullOrWhiteSpace(s.LastFolder))
+                        {
+                            s.LastFolder = value;
+                        }
+
                         break;
                     case "PreviewThumbnailSizeIndex":
                         if (int.TryParse(value, out var psi))
@@ -113,9 +117,9 @@ internal sealed class AppSettingsStore
                 }
             }
         }
-        catch
+        catch (IOException)
         {
-            // Keep defaults on malformed file.
+            return s;
         }
 
         return s;
@@ -131,9 +135,7 @@ internal sealed class AppSettingsStore
     public void Save(AppSettings settings)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("# Image Converter — auto-generated");
-        sb.AppendLine($"LastSourceFolder={Escape(settings.LastSourceFolder)}");
-        sb.AppendLine($"LastDestinationFolder={Escape(settings.LastDestinationFolder)}");
+        sb.AppendLine($"LastFolder={Escape(settings.LastFolder)}");
         sb.AppendLine($"PreviewThumbnailSizeIndex={settings.PreviewThumbnailSizeIndex}");
         sb.AppendLine($"MainWindowPlacementSaved={(settings.MainWindowPlacementSaved ? "true" : "false")}");
         sb.AppendLine($"MainWindowLeft={settings.MainWindowLeft.ToString(CultureInfo.InvariantCulture)}");

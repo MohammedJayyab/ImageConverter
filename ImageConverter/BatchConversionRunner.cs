@@ -1,13 +1,11 @@
 namespace ImageConverter;
 
-/// <summary>Runs <see cref="ImageConversion.Convert"/> over a list of files (used by the main window).</summary>
 internal static class BatchConversionRunner
 {
-    internal sealed record RunResult(int SuccessCount, int FailCount, IReadOnlyList<string> SuccessfulDestinationPaths);
+    internal sealed record RunResult(int SuccessCount, int FailCount, IReadOnlyList<string> SuccessfulOutputPaths);
 
     internal static RunResult Run(
         IReadOnlyList<string> sourcePaths,
-        string destinationFolder,
         int outputFormatIndex,
         int icoSquareSizePixels,
         IconBackgroundKind iconBackground,
@@ -26,30 +24,25 @@ internal static class BatchConversionRunner
             var name = Path.GetFileName(src);
             progress?.Report((i + 1, total, name));
 
-            var dest = SupportedFormats.BuildDestinationPath(src, destinationFolder, outputFormatIndex);
+            var outputPath = SupportedFormats.BuildOutputPath(src, outputFormatIndex);
             var request = new ConversionRequest
             {
                 SourcePath = src,
-                DestinationPath = dest,
+                DestinationPath = outputPath,
                 OutputFormatIndex = outputFormatIndex,
                 IcoSquareSizePixels = icoSquareSizePixels,
                 IconBackground = iconBackground
             };
 
             var code = ImageConversion.Convert(request, out _, cancellationToken);
-            switch (code)
+            if (code == 0)
             {
-                case 0:
-                    success++;
-                    createdOutputs.Add(dest);
-                    break;
-                case 1:
-                case 2:
-                    fail++;
-                    break;
-                default:
-                    fail++;
-                    break;
+                success++;
+                createdOutputs.Add(outputPath);
+            }
+            else
+            {
+                fail++;
             }
         }
 

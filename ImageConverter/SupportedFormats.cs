@@ -1,11 +1,16 @@
 namespace ImageConverter;
 
-/// <summary>Maps UI format indices to file extensions and Magick.NET formats.</summary>
 internal static class SupportedFormats
 {
-    internal const int Count = 6;
+    internal const int Count = 8;
 
-    private static readonly string[] FileExtensions = [".jpg", ".png", ".bmp", ".gif", ".webp", ".ico"];
+    internal const int IcoFormatIndex = 5;
+
+    internal const int SvgFormatIndex = 6;
+
+    internal const int PdfFormatIndex = 7;
+
+    private static readonly string[] FileExtensions = [".jpg", ".png", ".bmp", ".gif", ".webp", ".ico", ".svg", ".pdf"];
 
     internal static string GetFileExtension(int formatIndex)
     {
@@ -17,31 +22,14 @@ internal static class SupportedFormats
         return FileExtensions[formatIndex];
     }
 
-    /// <summary>Builds destination path: same base name, extension from selected output format.</summary>
-    internal static string BuildDestinationPath(string sourceFilePath, string destinationFolder, int outputFormatIndex)
+    internal static string BuildOutputPath(string sourceFilePath, int outputFormatIndex)
     {
+        var directory = Path.GetDirectoryName(sourceFilePath) ?? string.Empty;
         var ext = GetFileExtension(outputFormatIndex);
         var baseName = Path.GetFileNameWithoutExtension(sourceFilePath);
-        return Path.Combine(destinationFolder, baseName + ext);
+        return Path.Combine(directory, baseName + ext);
     }
 
-    /// <summary>Returns the UI format index for this path’s extension, or false if unrecognized.</summary>
-    internal static bool TryGetFormatIndexForPath(string filePath, out int formatIndex)
-    {
-        formatIndex = -1;
-        for (var i = 0; i < Count; i++)
-        {
-            if (FormatIndexMatchesExtension(filePath, i))
-            {
-                formatIndex = i;
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /// <summary>True when the file extension matches the selected “Convert from” format (JPEG accepts .jpg and .jpeg).</summary>
     internal static bool FormatIndexMatchesExtension(string filePath, int formatIndex)
     {
         var ext = Path.GetExtension(filePath).Trim();
@@ -58,6 +46,8 @@ internal static class SupportedFormats
             3 => ext.Equals(".gif", StringComparison.OrdinalIgnoreCase),
             4 => ext.Equals(".webp", StringComparison.OrdinalIgnoreCase),
             5 => ext.Equals(".ico", StringComparison.OrdinalIgnoreCase),
+            6 => ext.Equals(".svg", StringComparison.OrdinalIgnoreCase),
+            7 => ext.Equals(".pdf", StringComparison.OrdinalIgnoreCase),
             _ => false
         };
     }

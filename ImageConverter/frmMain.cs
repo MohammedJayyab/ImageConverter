@@ -3,9 +3,6 @@ using System.Diagnostics;
 
 namespace ImageConverter
 {
-    /// <summary>
-    /// Main form: presentation and orchestration; delegates conversion and settings to dedicated types.
-    /// </summary>
     public partial class frmMain : Form
     {
         private System.Windows.Forms.Timer? _layoutPersistTimer;
@@ -20,10 +17,11 @@ namespace ImageConverter
             "BMP (.bmp)",
             "GIF (.gif)",
             "WEBP (.webp)",
-            "ICO (.ico)"
+            "ICO (.ico)",
+            "SVG (.svg)",
+            "PDF (.pdf)"
         ];
 
-        /// <summary>Pixel dimensions matching <see cref="cmbIcoOutputSize"/> items (16 … 256).</summary>
         private static readonly int[] IcoOutputSizeValues = [16, 32, 48, 64, 128, 256];
 
         private readonly AppSettingsStore _settingsStore = new();
@@ -34,7 +32,7 @@ namespace ImageConverter
 
         private Func<bool>? _undoLastOperation;
         private bool _conversionBusy;
-        private string? _pendingBoldFileNameFromConvert;
+        private int _selectionInfoVersion;
 
         public frmMain()
         {
@@ -67,24 +65,34 @@ namespace ImageConverter
 
         private void WireEvents()
         {
-            btnBrowseSource.Click += async (_, _) => await BrowseForFolderAsync(isSource: true);
-            btnBrowseDest.Click += async (_, _) => await BrowseForFolderAsync(isSource: false);
-            listViewPreview.ItemSelectionChanged += (_, _) =>
-            {
-                RefreshSelectionStatusText();
-            };
+            menuFile.DropDownOpening += (_, _) => UpdateFileMenuState();
+            menuFileOpenFolder.Click += async (_, _) => await BrowseForFolderAsync();
+            menuFileRefreshReview.Click += async (_, _) => await ReloadSourcePreviewsAsync();
+            menuFileOpenFolderInExplorer.Click += (_, _) => OpenImageFolderInExplorer();
+            menuFilePasteImage.Click += async (_, _) => await PasteClipboardImageAsync();
+            menuFileUndo.Click += async (_, _) => await UndoLastOperationAsync();
+            menuFileExit.Click += (_, _) => Close();
+            menuHelpHowToUse.Click += (_, _) => ShowHowToUseDialog();
+            menuHelpAbout.Click += (_, _) => ShowAboutDialog();
+
+            btnBrowseSource.Click += async (_, _) => await BrowseForFolderAsync();
+            listViewPreview.ItemSelectionChanged += (_, _) => RefreshSelectionStatusText();
             btnRefreshPreview.Click += async (_, _) => await ReloadSourcePreviewsAsync();
-            btnOpenDestination.Click += (_, _) => OpenDestinationForSelection();
+            btnOpenFolder.Click += (_, _) => OpenImageFolderInExplorer();
             contextMenuPreview.Opening += PreviewContextMenuStrip_Opening;
             toolStripMenuItemPreviewCopy.Click += async (_, _) => await CopySelectedPreviewFilesToClipboardAsync();
-            toolStripMenuItemPreviewPaste.Click += async (_, _) => await PasteClipboardImageIntoSourceFolderAsync();
+            toolStripMenuItemPreviewRename.Click += async (_, _) => await RenameSelectedPreviewFileAsync();
+            toolStripMenuItemPreviewPaste.Click += async (_, _) => await PasteClipboardImageAsync();
             toolStripMenuItemPreviewDelete.Click += async (_, _) => await DeleteSelectedPreviewFilesAsync();
             toolStripMenuItemOpenSourceLocation.Click += (_, _) => OpenSelectedSourceFileLocation();
+            toolStripMenuItemPreviewCopyImagePath.Click += (_, _) => CopySelectedImagePathsToClipboard();
+            toolStripMenuItemOpenWithPaint.Click += (_, _) => OpenSelectedImageWithPaint();
+            toolStripMenuItemOpenWithPaintDotNet.Click += (_, _) => OpenSelectedImageWithPaintDotNet();
             toolStripMenuItemConvertToQuickIcon.Click += async (_, _) =>
             {
                 try
                 {
-                    await ConvertSelectionToFormatAsync(SupportedFormats.Count - 1, iconQuickAccess: true);
+                    await ConvertSelectionToFormatAsync(SupportedFormats.IcoFormatIndex, iconQuickAccess: true);
                 }
                 catch (Exception ex)
                 {
@@ -126,6 +134,8 @@ namespace ImageConverter
             listViewPreview.DragEnter += ListViewPreview_DragEnter;
             listViewPreview.DragOver += ListViewPreview_DragOver;
             listViewPreview.DragDrop += async (_, e) => await ListViewPreview_DragDropAsync(e);
+            listViewPreview.DrawItem += ListViewPreview_DrawItem;
+            listViewPreview.KeyDown += ListViewPreview_KeyDown;
             lblPreviewPlaceholder.DragEnter += ListViewPreview_DragEnter;
             lblPreviewPlaceholder.DragOver += ListViewPreview_DragOver;
             lblPreviewPlaceholder.DragDrop += async (_, e) => await ListViewPreview_DragDropAsync(e);
@@ -149,22 +159,9 @@ namespace ImageConverter
             _loadingUiSettings = true;
             try
             {
-                if (!string.IsNullOrWhiteSpace(_settings.LastSourceFolder) && Directory.Exists(_settings.LastSourceFolder))
+                if (!string.IsNullOrWhiteSpace(_settings.LastFolder) && Directory.Exists(_settings.LastFolder))
                 {
-                    txtSourceFolder.Text = _settings.LastSourceFolder;
-                }
-
-                if (!string.IsNullOrWhiteSpace(_settings.LastDestinationFolder) && Directory.Exists(_settings.LastDestinationFolder))
-                {
-                    txtDestFolder.Text = _settings.LastDestinationFolder;
-                }
-                else
-                {
-                    var src = txtSourceFolder.Text.Trim();
-                    if (!string.IsNullOrEmpty(src) && Directory.Exists(src))
-                    {
-                        txtDestFolder.Text = src;
-                    }
+                    txtSourceFolder.Text = _settings.LastFolder;
                 }
 
                 var previewIdx = Math.Clamp(_settings.PreviewThumbnailSizeIndex, 0, cmbPreviewSize.Items.Count > 0 ? cmbPreviewSize.Items.Count - 1 : 0);
@@ -206,8 +203,7 @@ namespace ImageConverter
 
         private void PersistSettings()
         {
-            _settings.LastSourceFolder = txtSourceFolder.Text.Trim();
-            _settings.LastDestinationFolder = txtDestFolder.Text.Trim();
+            _settings.LastFolder = txtSourceFolder.Text.Trim();
             _settings.PreviewThumbnailSizeIndex = cmbPreviewSize.SelectedIndex >= 0 ? Math.Clamp(cmbPreviewSize.SelectedIndex, 0, 2) : 1;
             _settings.IcoOutputSizeIndex = cmbIcoOutputSize.SelectedIndex >= 0 ? Math.Clamp(cmbIcoOutputSize.SelectedIndex, 0, IcoOutputSizeValues.Length - 1) : 5;
             _settings.SolidColorIndex = cmbSolidColor.SelectedIndex >= 0 ? Math.Clamp(cmbSolidColor.SelectedIndex, 0, 1) : 0;
@@ -248,10 +244,10 @@ namespace ImageConverter
         {
             return index switch
             {
-                0 => 80,
-                1 => 128,
-                2 => 192,
-                _ => 128
+                0 => 40,
+                1 => 64,
+                2 => 96,
+                _ => 64
             };
         }
 
@@ -267,26 +263,147 @@ namespace ImageConverter
             return GetPreviewPixelSizeForIndex(idx);
         }
 
-        private void ApplyPreviewTileLayoutFromPixelSize(int px)
+        private void ApplyPreviewTileLayoutFromPixelSize(int px, IReadOnlyList<string>? filePathsForLabelSizing = null)
         {
             imageListThumbnails.ImageSize = new Size(px, px);
 
-            // Tile view packs icon + wrapped filename into TileSize; if height is too small (common with "Small"
-            // thumbnails + larger fonts / DPI), comctl clips from the top/bottom. Reserve space from font metrics.
-            const int horizontalPad = 16;
-            var tileW = Math.Max(px + horizontalPad, 96);
+            const int minTileWidth = 120;
+            const int horizontalPad = 24;
+            var tileW = Math.Max(minTileWidth, px + horizontalPad);
 
             var lineH = TextRenderer.MeasureText("Aygjp", listViewPreview.Font, Size.Empty,
                 TextFormatFlags.NoPadding).Height;
-            // Up to 3 text lines: long name wrap, or name + “( icon)” on its own line.
-            var textBand = lineH * 3 + 12;
-            const int iconToTextGap = 10;
-            const int verticalChrome = 14;
+            var maxTextLines = 2;
+            if (filePathsForLabelSizing is { Count: > 0 })
+            {
+                foreach (var path in filePathsForLabelSizing)
+                {
+                    var label = BuildPreviewItemLabel(path);
+                    var lines = MeasureWrappedLineCount(label, listViewPreview.Font, tileW - 12, lineH);
+                    maxTextLines = Math.Max(maxTextLines, lines);
+                }
+            }
 
+            maxTextLines = Math.Min(maxTextLines, 4);
+            const int iconToTextGap = 10;
+            const int verticalChrome = 16;
+            var textBand = lineH * maxTextLines + 12;
             var tileH = px + iconToTextGap + textBand + verticalChrome;
 
             listViewPreview.TileSize = new Size(tileW, tileH);
             listViewPreview.Padding = new Padding(6, 8, 6, 8);
+        }
+
+        private static string BuildPreviewItemLabel(string fullPath)
+        {
+            var name = Path.GetFileName(fullPath);
+            return SupportedFormats.FormatIndexMatchesExtension(fullPath, SupportedFormats.IcoFormatIndex)
+                ? $"{name}{Environment.NewLine}( icon)"
+                : name;
+        }
+
+        private static int MeasureWrappedLineCount(string text, Font font, int maxWidth, int lineHeight)
+        {
+            if (string.IsNullOrEmpty(text) || maxWidth <= 0 || lineHeight <= 0)
+            {
+                return 1;
+            }
+
+            var measured = TextRenderer.MeasureText(
+                text,
+                font,
+                new Size(maxWidth, int.MaxValue),
+                TextFormatFlags.WordBreak | TextFormatFlags.NoPadding);
+            return Math.Max(1, (int)Math.Ceiling(measured.Height / (double)lineHeight));
+        }
+
+        private static Rectangle GetPreviewItemTextBounds(Rectangle tileBounds, Size imgSize)
+        {
+            var imgY = tileBounds.Y + 4;
+            var textTop = imgY + imgSize.Height + 6;
+            return new Rectangle(
+                tileBounds.X + 4,
+                textTop,
+                Math.Max(0, tileBounds.Width - 8),
+                Math.Max(0, tileBounds.Bottom - textTop - 4));
+        }
+
+        private void ListViewPreview_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (_conversionBusy)
+            {
+                return;
+            }
+
+            if (e.KeyCode == Keys.F5)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                _ = ReloadPreviewKeepingSelectionAsync();
+                return;
+            }
+
+            if (e.KeyCode == Keys.F2 && listViewPreview.SelectedItems.Count == 1)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+                _ = RenameSelectedPreviewFileAsync();
+            }
+        }
+
+        private void ListViewPreview_DrawItem(object? sender, DrawListViewItemEventArgs e)
+        {
+            e.DrawDefault = false;
+            if (e.Item is null)
+            {
+                return;
+            }
+
+            var tile = e.Bounds;
+            var imgSize = imageListThumbnails.ImageSize;
+            var imgX = tile.X + Math.Max(0, (tile.Width - imgSize.Width) / 2);
+            var imgY = tile.Y + 4;
+            var imgRect = new Rectangle(imgX, imgY, imgSize.Width, imgSize.Height);
+
+            var textRect = GetPreviewItemTextBounds(tile, imgSize);
+
+            var focused = (e.State & ListViewItemStates.Focused) == ListViewItemStates.Focused;
+            Color backColor;
+            if (e.Item.Selected)
+            {
+                backColor = focused ? SystemColors.Highlight : SystemColors.Control;
+            }
+            else
+            {
+                backColor = listViewPreview.BackColor;
+            }
+            var foreColor = e.Item.Selected && focused
+                ? SystemColors.HighlightText
+                : listViewPreview.ForeColor;
+
+            using (var backBrush = new SolidBrush(backColor))
+            {
+                e.Graphics.FillRectangle(backBrush, tile);
+            }
+
+            if (e.Item.ImageIndex >= 0 && e.Item.ImageIndex < imageListThumbnails.Images.Count)
+            {
+                imageListThumbnails.Draw(e.Graphics, imgRect.Location, e.Item.ImageIndex);
+            }
+
+            TextRenderer.DrawText(
+                e.Graphics,
+                e.Item.Text,
+                e.Item.Font ?? listViewPreview.Font,
+                textRect,
+                foreColor,
+                backColor,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.WordBreak | TextFormatFlags.NoPadding);
+
+            if (e.Item.Selected && focused)
+            {
+                ControlPaint.DrawFocusRectangle(e.Graphics, tile);
+            }
         }
 
         private void ApplySavedSplitterDistanceOnce()
@@ -321,9 +438,10 @@ namespace ImageConverter
                     _applyingSavedSplitterDistance = false;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                // Ignore invalid splitter during early layout.
+                Debug.WriteLine(ex);
+                return;
             }
         }
 
@@ -358,6 +476,65 @@ namespace ImageConverter
             }
         }
 
+        private void OpenSelectedImageWithPaint()
+        {
+            OpenSelectedImageWithEditor(ExternalImageEditorLauncher.TryOpenWithPaint, "Paint");
+        }
+
+        private void OpenSelectedImageWithPaintDotNet()
+        {
+            OpenSelectedImageWithEditor(ExternalImageEditorLauncher.TryOpenWithPaintDotNet, "Paint.NET");
+        }
+
+        private void OpenSelectedImageWithEditor(TryOpenImageEditor openEditor, string editorName)
+        {
+            var paths = GetSelectedSourcePaths();
+            if (paths.Count == 0)
+            {
+                return;
+            }
+
+            var path = paths[0];
+            if (!openEditor(path, out var error))
+            {
+                MessageBox.Show(
+                    this,
+                    error ?? $"Could not open the image with {editorName}.",
+                    editorName,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                SetStatusMessage($"Could not open with {editorName}.");
+                return;
+            }
+
+            SetStatusMessage($"Opened {Path.GetFileName(path)} with {editorName}.");
+        }
+
+        private void CopySelectedImagePathsToClipboard()
+        {
+            var paths = GetSelectedSourcePaths();
+            if (paths.Count == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                Clipboard.SetText(paths.Count == 1
+                    ? paths[0]
+                    : string.Join(Environment.NewLine, paths));
+                SetStatusMessage(paths.Count == 1
+                    ? "Copied image path to clipboard."
+                    : $"Copied {paths.Count} image paths to clipboard.");
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Could not copy path: " + ex.Message, "Copy image path", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private delegate bool TryOpenImageEditor(string imagePath, out string? errorMessage);
+
         private async Task InitialPreviewLoadAsync()
         {
             var folder = txtSourceFolder.Text.Trim();
@@ -369,53 +546,26 @@ namespace ImageConverter
             await ReloadSourcePreviewsAsync();
         }
 
-        private async Task BrowseForFolderAsync(bool isSource)
+        private async Task BrowseForFolderAsync()
         {
-            folderBrowserDialog.InitialDirectory = GetInitialDirectoryHint(isSource);
-            if (folderBrowserDialog.ShowDialog(this) != DialogResult.OK)
+            var hint = GetInitialBrowseFolder();
+            if (!FolderPicker.TryPick(this, "Select image folder", hint, out var path) || string.IsNullOrWhiteSpace(path))
             {
                 return;
             }
 
-            var path = folderBrowserDialog.SelectedPath;
-            if (string.IsNullOrWhiteSpace(path))
-            {
-                return;
-            }
-
-            if (isSource)
-            {
-                txtSourceFolder.Text = path;
-                if (string.IsNullOrWhiteSpace(txtDestFolder.Text))
-                {
-                    txtDestFolder.Text = path;
-                }
-
-                await ReloadSourcePreviewsAsync();
-            }
-            else
-            {
-                txtDestFolder.Text = path;
-                SetStatusMessage("Destination folder selected.");
-            }
+            txtSourceFolder.Text = path;
+            await ReloadSourcePreviewsAsync();
         }
 
-        private string GetInitialDirectoryHint(bool isSource)
+        private string GetInitialBrowseFolder()
         {
-            var current = isSource ? txtSourceFolder.Text : txtDestFolder.Text;
-            if (!string.IsNullOrWhiteSpace(current) && Directory.Exists(current))
+            if (TryNormalizeDirectoryPath(txtSourceFolder.Text.Trim(), out var current))
             {
-                try
-                {
-                    return Path.GetFullPath(current);
-                }
-                catch
-                {
-                    // Fall through to a known-good default.
-                }
+                return current;
             }
 
-            return Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+            return FolderPicker.GetDefaultBrowseFolder();
         }
 
         private void ListViewPreview_DragEnter(object? sender, DragEventArgs e)
@@ -465,11 +615,6 @@ namespace ImageConverter
                 }
 
                 txtSourceFolder.Text = folder;
-                if (string.IsNullOrWhiteSpace(txtDestFolder.Text))
-                {
-                    txtDestFolder.Text = folder;
-                }
-
                 await ReloadSourcePreviewsAsync();
             }
             catch (Exception ex)
@@ -478,20 +623,14 @@ namespace ImageConverter
             }
         }
 
-        /// <summary>
-        /// Loads thumbnails for the current source folder (top-level files only). Uses System.Drawing for preview; Magick.NET is for conversion later.
-        /// </summary>
-        /// <param name="selectFullPathsAfter">Optional full paths to select once the list is rebuilt (e.g. files created in the source folder).</param>
-        /// <param name="statusOverride">When set, replaces the default Ready / count status after load.</param>
         private async Task ReloadSourcePreviewsAsync(IReadOnlyCollection<string>? selectFullPathsAfter = null, string? statusOverride = null)
         {
             await ReplacePreviewLoadCancellationAsync();
 
             var ct = _previewLoadCts!.Token;
-            var folder = txtSourceFolder.Text.Trim();
-            if (!IsValidPreviewSourceFolder(folder))
+            if (!TryNormalizeDirectoryPath(txtSourceFolder.Text.Trim(), out var folder))
             {
-                HandleInvalidPreviewSourceFolder();
+                HandleInvalidImageFolder();
                 return;
             }
 
@@ -520,15 +659,23 @@ namespace ImageConverter
             }
 
             var thumbPx = GetPreviewThumbnailPixelSize();
+            ApplyPreviewTileLayoutFromPixelSize(thumbPx, files);
             var selectSet = BuildPreviewSelectionSet(selectFullPathsAfter);
 
             try
             {
-                LoadPreviewThumbnailBatches(files, thumbPx, ct);
+                await LoadPreviewThumbnailBatchesAsync(files, thumbPx, ct).ConfigureAwait(true);
             }
             finally
             {
-                FinalizePreviewListReload(selectSet, statusOverride);
+                if (!ct.IsCancellationRequested)
+                {
+                    FinalizePreviewListReload(selectSet, statusOverride);
+                }
+                else
+                {
+                    RunOnUiThread(listViewPreview.EndUpdate);
+                }
             }
         }
 
@@ -545,21 +692,41 @@ namespace ImageConverter
             previous.Dispose();
         }
 
-        private static bool IsValidPreviewSourceFolder(string folder)
-        {
-            return !string.IsNullOrEmpty(folder) && Directory.Exists(folder);
-        }
-
-        private void HandleInvalidPreviewSourceFolder()
+        private void HandleInvalidImageFolder()
         {
             RunOnUiThread(ClearPreviewList);
             UpdatePlaceholderVisibility();
-            SetStatusMessage("Invalid source folder.");
+            SetStatusMessage("Invalid image folder.");
         }
 
         private static Task<List<string>> EnumeratePreviewFilesAsync(string folder, CancellationToken ct)
         {
             return Task.Run(() => FolderThumbnailLoader.EnumerateImageFiles(folder), ct);
+        }
+
+        private static bool TryNormalizeDirectoryPath(string? path, out string normalizedPath)
+        {
+            normalizedPath = string.Empty;
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                return false;
+            }
+
+            try
+            {
+                var fullPath = Path.GetFullPath(path.Trim());
+                if (!Directory.Exists(fullPath))
+                {
+                    return false;
+                }
+
+                normalizedPath = Path.TrimEndingDirectorySeparator(fullPath);
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private void BeginPreviewListReload()
@@ -589,10 +756,24 @@ namespace ImageConverter
                 return null;
             }
 
-            return new HashSet<string>(selectFullPathsAfter, StringComparer.OrdinalIgnoreCase);
+            return new HashSet<string>(
+                selectFullPathsAfter.Select(NormalizePreviewPath),
+                StringComparer.OrdinalIgnoreCase);
         }
 
-        private void LoadPreviewThumbnailBatches(IReadOnlyList<string> files, int thumbPx, CancellationToken ct)
+        private static string NormalizePreviewPath(string path)
+        {
+            try
+            {
+                return Path.GetFullPath(path);
+            }
+            catch
+            {
+                return path;
+            }
+        }
+
+        private async Task LoadPreviewThumbnailBatchesAsync(IReadOnlyList<string> files, int thumbPx, CancellationToken ct)
         {
             const int batchSize = 30;
             for (var i = 0; i < files.Count; i += batchSize)
@@ -603,7 +784,10 @@ namespace ImageConverter
                 }
 
                 var slice = files.Skip(i).Take(batchSize).ToList();
-                var batch = BuildThumbnailBatch(slice, thumbPx, ct);
+                var batch = await Task.Run(
+                        () => BuildThumbnailBatch(slice, thumbPx, CancellationToken.None),
+                        ct)
+                    .ConfigureAwait(true);
                 if (ct.IsCancellationRequested)
                 {
                     DisposeThumbnailBitmaps(batch);
@@ -627,7 +811,7 @@ namespace ImageConverter
                     break;
                 }
 
-                var bmp = FolderThumbnailLoader.TryCreateThumbnail(f, thumbPx);
+                var bmp = FolderThumbnailLoader.CreateThumbnailOrPlaceholder(f, thumbPx);
                 batch.Add((bmp, Path.GetFileName(f), f));
             }
 
@@ -646,7 +830,7 @@ namespace ImageConverter
         {
             RunOnUiThread(() =>
             {
-                foreach (var (bmp, name, fullPath) in batch)
+                foreach (var (bmp, _, fullPath) in batch)
                 {
                     if (bmp is null)
                     {
@@ -655,10 +839,11 @@ namespace ImageConverter
 
                     imageListThumbnails.Images.Add(bmp);
                     var idx = imageListThumbnails.Images.Count - 1;
-                    var displayLabel = SupportedFormats.FormatIndexMatchesExtension(fullPath, 5)
-                        ? $"{name}{Environment.NewLine}( icon)"
-                        : name;
-                    listViewPreview.Items.Add(new ListViewItem(displayLabel, idx) { Tag = fullPath });
+                    var normalizedPath = NormalizePreviewPath(fullPath);
+                    listViewPreview.Items.Add(new ListViewItem(BuildPreviewItemLabel(normalizedPath), idx)
+                    {
+                        Tag = normalizedPath
+                    });
                 }
             });
         }
@@ -687,12 +872,22 @@ namespace ImageConverter
             if (selectSet is not null)
             {
                 listViewPreview.SelectedItems.Clear();
+                ListViewItem? firstSelected = null;
                 foreach (ListViewItem item in listViewPreview.Items)
                 {
-                    if (item.Tag is string p && selectSet.Contains(p))
+                    if (item.Tag is string p && selectSet.Contains(NormalizePreviewPath(p)))
                     {
                         item.Selected = true;
+                        firstSelected ??= item;
                     }
+                }
+
+                if (firstSelected is not null)
+                {
+                    listViewPreview.FocusedItem = firstSelected;
+                    firstSelected.EnsureVisible();
+                    RefreshSelectionStatusText();
+                    return;
                 }
             }
 
@@ -727,7 +922,6 @@ namespace ImageConverter
             }
         }
 
-        /// <summary>Formats that are not redundant for every selected path (omit “convert to same type”).</summary>
         private static List<int> BuildAllowedConvertToFormatIndices(IReadOnlyList<string> paths)
         {
             var list = new List<int>();
@@ -747,7 +941,6 @@ namespace ImageConverter
             return paths.Where(p => !SupportedFormats.FormatIndexMatchesExtension(p, targetFormatIndex)).ToList();
         }
 
-        /// <summary>Single selected ICO square dimension in pixels.</summary>
         private int GetSelectedIcoOutputSize()
         {
             var idx = cmbIcoOutputSize.SelectedIndex;
@@ -768,13 +961,9 @@ namespace ImageConverter
             }
         }
 
-        /// <summary>True when source/destination folders exist and at least one thumbnail is selected.</summary>
         private bool CanConvertSelection()
         {
-            var pathsOk = !string.IsNullOrWhiteSpace(txtSourceFolder.Text)
-                && Directory.Exists(txtSourceFolder.Text.Trim())
-                && !string.IsNullOrWhiteSpace(txtDestFolder.Text)
-                && Directory.Exists(txtDestFolder.Text.Trim());
+            var pathsOk = TryNormalizeDirectoryPath(txtSourceFolder.Text.Trim(), out _);
 
             return pathsOk && listViewPreview.SelectedItems.Count > 0;
         }
@@ -784,24 +973,44 @@ namespace ImageConverter
             return cmbSolidColor.SelectedIndex == 1 ? IconBackgroundKind.SolidBlack : IconBackgroundKind.SolidWhite;
         }
 
+        private void UpdateFileMenuState()
+        {
+            var busy = _conversionBusy;
+            menuFileOpenFolder.Enabled = !busy;
+            menuFileRefreshReview.Enabled = !busy;
+            menuFileOpenFolderInExplorer.Enabled = !busy;
+            menuFilePasteImage.Enabled = !busy && Clipboard.ContainsImage();
+            menuFileUndo.Enabled = !busy && _undoLastOperation is not null;
+        }
+
+        private void ShowHowToUseDialog()
+        {
+            using var form = new frmHowToUse();
+            form.ShowDialog(this);
+        }
+
+        private void ShowAboutDialog()
+        {
+            using var form = new frmAbout();
+            form.ShowDialog(this);
+        }
+
         private void SetConversionBusy(bool busy)
         {
             _conversionBusy = busy;
+            UpdateFileMenuState();
             btnBrowseSource.Enabled = !busy;
-            btnBrowseDest.Enabled = !busy;
             txtSourceFolder.Enabled = !busy;
-            txtDestFolder.Enabled = !busy;
             cmbIcoOutputSize.Enabled = !busy;
             cmbSolidColor.Enabled = !busy;
             btnRefreshPreview.Enabled = !busy;
-            btnOpenDestination.Enabled = !busy;
+            btnOpenFolder.Enabled = !busy;
             cmbPreviewSize.Enabled = !busy;
             listViewPreview.Enabled = !busy;
             UpdateUndoButtonEnabled();
             btnCancel.Enabled = busy;
         }
 
-        /// <param name="iconQuickAccess">When true and target is ICO, convert every selected file (including existing .ico for rebuild).</param>
         private async Task ConvertSelectionToFormatAsync(int outputFormatIndex, bool iconQuickAccess)
         {
             if (outputFormatIndex < 0 || outputFormatIndex >= SupportedFormats.Count)
@@ -809,8 +1018,7 @@ namespace ImageConverter
                 return;
             }
 
-            var destFolder = txtDestFolder.Text.Trim();
-            if (!EnsureDestinationFolderExists(destFolder))
+            if (!EnsureImageFolderExists())
             {
                 return;
             }
@@ -828,7 +1036,7 @@ namespace ImageConverter
             }
 
             List<string> pathsToConvert;
-            var icoIndex = SupportedFormats.Count - 1;
+            var icoIndex = SupportedFormats.IcoFormatIndex;
             if (iconQuickAccess && outputFormatIndex == icoIndex)
             {
                 pathsToConvert = paths;
@@ -848,31 +1056,81 @@ namespace ImageConverter
                 }
             }
 
-            await RunBatchConversionAndRefreshAsync(pathsToConvert, destFolder, outputFormatIndex).ConfigureAwait(true);
+            if (!ConfirmOverwriteExistingOutputs(pathsToConvert, outputFormatIndex))
+            {
+                SetStatusMessage("Conversion cancelled — existing file(s) were not overwritten.");
+                return;
+            }
+
+            await RunBatchConversionAndRefreshAsync(pathsToConvert, outputFormatIndex).ConfigureAwait(true);
         }
 
-        private bool EnsureDestinationFolderExists(string destFolder)
+        private bool ConfirmOverwriteExistingOutputs(
+            IReadOnlyList<string> sourcePaths,
+            int outputFormatIndex)
         {
-            if (!Directory.Exists(destFolder))
+            var existingOutputs = sourcePaths
+                .Select(src => SupportedFormats.BuildOutputPath(src, outputFormatIndex))
+                .Where(File.Exists)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (existingOutputs.Count == 0)
+            {
+                return true;
+            }
+
+            string message;
+            if (existingOutputs.Count == 1)
+            {
+                message = $"\"{Path.GetFileName(existingOutputs[0])}\" already exists.\n\nOverwrite it?";
+            }
+            else
+            {
+                var preview = string.Join(
+                    Environment.NewLine,
+                    existingOutputs.Take(3).Select(Path.GetFileName));
+                if (existingOutputs.Count > 3)
+                {
+                    preview += $"{Environment.NewLine}(+{existingOutputs.Count - 3} more)";
+                }
+
+                message =
+                    $"{existingOutputs.Count} output file(s) already exist and will be overwritten:\n\n{preview}\n\nContinue?";
+            }
+
+            return MessageBox.Show(
+                    this,
+                    message,
+                    "Confirm overwrite",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning,
+                    MessageBoxDefaultButton.Button2)
+                == DialogResult.Yes;
+        }
+
+        private bool EnsureImageFolderExists()
+        {
+            if (!TryNormalizeDirectoryPath(txtSourceFolder.Text.Trim(), out var folder))
             {
                 MessageBox.Show(
                     this,
-                    "The destination folder does not exist or is not accessible.",
+                    "Choose a valid image folder before converting.",
                     "Convert",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
-                SetStatusMessage("Invalid destination folder.");
+                SetStatusMessage("Invalid image folder.");
                 return false;
             }
 
-            if (IsDriveRootFolderPath(destFolder))
+            if (IsDriveRootFolderPath(folder))
             {
                 MessageBox.Show(
                     this,
-                    "The destination cannot be the root of a drive (for example C:\\).\n\n" +
+                    "The image folder cannot be the root of a drive (for example C:\\).\n\n" +
                     "Windows blocks creating files directly under C:\\ for normal (non-elevated) apps. " +
                     "Use Browse to choose a folder inside your profile (for example Documents or Pictures).",
-                    "Destination not allowed",
+                    "Folder not allowed",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
                 SetStatusMessage("Pick a subfolder — not C:\\.");
@@ -882,16 +1140,11 @@ namespace ImageConverter
             return true;
         }
 
-        /// <summary>
-        /// True when <paramref name="folderPath"/> is a local volume root such as <c>C:\</c>.
-        /// Writing output files there typically fails with “permission denied” unless the process is elevated.
-        /// </summary>
         private static bool IsDriveRootFolderPath(string folderPath)
         {
             try
             {
                 var full = Path.GetFullPath(folderPath.Trim());
-                // UNC roots are ambiguous; rely on existence checks elsewhere.
                 if (full.StartsWith(@"\\", StringComparison.Ordinal))
                 {
                     return false;
@@ -938,33 +1191,10 @@ namespace ImageConverter
 
         private List<string> GetSuccessfulOutputsExistingOnDisk(BatchConversionRunner.RunResult batchResult)
         {
-            return batchResult.SuccessfulDestinationPaths.Where(File.Exists).ToList();
-        }
-
-        private List<string> FilterOutputsUnderSourceFolder(List<string> createdOutputs)
-        {
-            var sourceFolder = txtSourceFolder.Text.Trim();
-            var normalizedSource = Path.TrimEndingDirectorySeparator(Path.GetFullPath(sourceFolder));
-            return createdOutputs
-                .Where(p =>
-                {
-                    var dir = Path.TrimEndingDirectorySeparator(Path.GetFullPath(Path.GetDirectoryName(p) ?? ""));
-                    return dir.Equals(normalizedSource, StringComparison.OrdinalIgnoreCase);
-                })
+            return batchResult.SuccessfulOutputPaths
+                .Select(NormalizePreviewPath)
+                .Where(File.Exists)
                 .ToList();
-        }
-
-        private void UpdatePendingBoldForOutputsNotInReview(List<string> createdOutputs, List<string> inSourceFolder)
-        {
-            _pendingBoldFileNameFromConvert = null;
-            if (inSourceFolder.Count != 0 || createdOutputs.Count == 0)
-            {
-                return;
-            }
-
-            _pendingBoldFileNameFromConvert = createdOutputs.Count == 1
-                ? Path.GetFileName(createdOutputs[0])
-                : $"{Path.GetFileName(createdOutputs[0])} (+{createdOutputs.Count - 1})";
         }
 
         private void RegisterUndoForSuccessfulOutputs(BatchConversionRunner.RunResult batchResult, List<string> createdOutputs)
@@ -998,8 +1228,7 @@ namespace ImageConverter
         private async Task ApplyConversionResultAndReloadAsync(BatchConversionRunner.RunResult batchResult)
         {
             var createdOutputs = GetSuccessfulOutputsExistingOnDisk(batchResult);
-            var inSourceFolder = FilterOutputsUnderSourceFolder(createdOutputs);
-            UpdatePendingBoldForOutputsNotInReview(createdOutputs, inSourceFolder);
+            await WaitForOutputsOnDiskAsync(createdOutputs).ConfigureAwait(true);
 
             if (batchResult.FailCount > 0)
             {
@@ -1011,12 +1240,31 @@ namespace ImageConverter
             var summary = batchResult.FailCount == 0
                 ? $"Conversion finished — {batchResult.SuccessCount} file(s) converted."
                 : $"Conversion finished — {batchResult.SuccessCount} succeeded, {batchResult.FailCount} failed.";
-            await ReloadSourcePreviewsAsync(inSourceFolder.Count > 0 ? inSourceFolder : null, summary).ConfigureAwait(true);
+            await ReloadSourcePreviewsAsync(
+                createdOutputs.Count > 0 ? createdOutputs : null,
+                summary).ConfigureAwait(true);
+        }
+
+        private static async Task WaitForOutputsOnDiskAsync(IReadOnlyList<string> paths)
+        {
+            if (paths.Count == 0)
+            {
+                return;
+            }
+
+            for (var attempt = 0; attempt < 8; attempt++)
+            {
+                if (paths.All(File.Exists))
+                {
+                    return;
+                }
+
+                await Task.Delay(50).ConfigureAwait(true);
+            }
         }
 
         private async Task RunBatchConversionAndRefreshAsync(
             IReadOnlyList<string> pathsToConvert,
-            string destFolder,
             int toIndex)
         {
             var icoSquareSize = GetSelectedIcoOutputSize();
@@ -1043,7 +1291,6 @@ namespace ImageConverter
                 batchResult = await Task.Run(
                         () => BatchConversionRunner.Run(
                             pathsToConvert,
-                            destFolder,
                             toIndex,
                             icoSquareSize,
                             iconBackground,
@@ -1073,8 +1320,7 @@ namespace ImageConverter
             await ApplyConversionResultAndReloadAsync(batchResult).ConfigureAwait(true);
         }
 
-        /// <summary>Paste image from clipboard into the source folder as PNG, then refresh review.</summary>
-        private async Task PasteClipboardImageIntoSourceFolderAsync()
+        private async Task PasteClipboardImageAsync()
         {
             if (!Clipboard.ContainsImage())
             {
@@ -1087,12 +1333,11 @@ namespace ImageConverter
                 return;
             }
 
-            var folder = txtSourceFolder.Text.Trim();
-            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+            if (!TryNormalizeDirectoryPath(txtSourceFolder.Text.Trim(), out var folder))
             {
                 MessageBox.Show(
                     this,
-                    "Choose a valid source folder before pasting.",
+                    "Choose a valid image folder before pasting.",
                     "Paste",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Warning);
@@ -1147,7 +1392,6 @@ namespace ImageConverter
             }
         }
 
-        /// <summary>Copy selected file(s) as images to the clipboard, then refresh review.</summary>
         private async Task CopySelectedPreviewFilesToClipboardAsync()
         {
             var paths = GetSelectedSourcePaths();
@@ -1227,20 +1471,13 @@ namespace ImageConverter
                             File.Move(temp, orig);
                         }
                     }
-                    catch
+                    catch (IOException rollbackEx)
                     {
-                        // best effort rollback
+                        Debug.WriteLine(rollbackEx);
                     }
                 }
 
-                try
-                {
-                    Directory.Delete(sessionDir, true);
-                }
-                catch
-                {
-                    // ignore
-                }
+                TryDeleteSessionDirectory(sessionDir);
 
                 MessageBox.Show(this, "Could not move files for delete: " + ex.Message, "Delete", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
@@ -1249,6 +1486,178 @@ namespace ImageConverter
             RegisterUndo(() => TryUndoDeleteMoves(sessionDir, movedPairs));
 
             await ReloadSourcePreviewsAsync(null, "Deleted selected file(s).");
+        }
+
+        private async Task ReloadPreviewKeepingSelectionAsync()
+        {
+            var selected = GetSelectedSourcePaths();
+            await ReloadSourcePreviewsAsync(
+                selected.Count > 0 ? selected : null,
+                "Review refreshed.");
+        }
+
+        private async Task RenameSelectedPreviewFileAsync()
+        {
+            if (_conversionBusy)
+            {
+                return;
+            }
+
+            if (listViewPreview.SelectedItems.Count != 1)
+            {
+                MessageBox.Show(
+                    this,
+                    "Select exactly one image to rename.",
+                    "Rename",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            var oldPath = GetSelectedSourcePaths()[0];
+            if (!File.Exists(oldPath))
+            {
+                SetStatusMessage("Selected file was not found on disk.");
+                await ReloadPreviewKeepingSelectionAsync();
+                return;
+            }
+
+            var ext = Path.GetExtension(oldPath);
+            var currentBaseName = Path.GetFileNameWithoutExtension(oldPath);
+            if (!TryPromptForFileRename(currentBaseName, out var newBaseName)
+                || string.IsNullOrWhiteSpace(newBaseName)
+                || string.Equals(newBaseName, currentBaseName, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            var dir = Path.GetDirectoryName(oldPath)!;
+            var newPath = Path.Combine(dir, newBaseName + ext);
+            if (File.Exists(newPath))
+            {
+                MessageBox.Show(
+                    this,
+                    $"A file named \"{Path.GetFileName(newPath)}\" already exists in this folder.",
+                    "Rename",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                return;
+            }
+
+            try
+            {
+                File.Move(oldPath, newPath);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this, "Rename failed: " + ex.Message, "Rename", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            RegisterUndo(() =>
+            {
+                try
+                {
+                    if (!File.Exists(newPath) || File.Exists(oldPath))
+                    {
+                        return false;
+                    }
+
+                    File.Move(newPath, oldPath);
+                    return true;
+                }
+                catch
+                {
+                    return false;
+                }
+            });
+
+            await ReloadSourcePreviewsAsync([newPath], $"Renamed to {Path.GetFileName(newPath)}.");
+        }
+
+        private bool TryPromptForFileRename(string currentBaseName, out string? newBaseName)
+        {
+            newBaseName = null;
+            using var form = new Form
+            {
+                Text = "Rename",
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                StartPosition = FormStartPosition.CenterParent,
+                MinimizeBox = false,
+                MaximizeBox = false,
+                ShowInTaskbar = false,
+                ClientSize = new Size(420, 120),
+                Font = Font
+            };
+
+            var label = new Label
+            {
+                Text = "New name:",
+                AutoSize = true,
+                Location = new Point(12, 16)
+            };
+            var textBox = new TextBox
+            {
+                Text = currentBaseName,
+                Location = new Point(12, 44),
+                Width = 396
+            };
+            var btnOk = new Button
+            {
+                Text = "OK",
+                DialogResult = DialogResult.OK,
+                Location = new Point(252, 78),
+                AutoSize = true
+            };
+            var btnRenameCancel = new Button
+            {
+                Text = "Cancel",
+                DialogResult = DialogResult.Cancel,
+                Location = new Point(333, 78),
+                AutoSize = true
+            };
+
+            form.Controls.Add(label);
+            form.Controls.Add(textBox);
+            form.Controls.Add(btnOk);
+            form.Controls.Add(btnRenameCancel);
+            form.AcceptButton = btnOk;
+            form.CancelButton = btnRenameCancel;
+            form.Shown += (_, _) =>
+            {
+                textBox.Focus();
+                textBox.SelectAll();
+            };
+
+            if (form.ShowDialog(this) != DialogResult.OK)
+            {
+                return false;
+            }
+
+            var trimmed = textBox.Text.Trim();
+            if (string.IsNullOrEmpty(trimmed))
+            {
+                return false;
+            }
+
+            newBaseName = SanitizeFileBaseName(trimmed);
+            return !string.IsNullOrEmpty(newBaseName);
+        }
+
+        private static string SanitizeFileBaseName(string name)
+        {
+            var trimmed = name.Trim();
+            foreach (var c in Path.GetInvalidFileNameChars())
+            {
+                trimmed = trimmed.Replace(c, '_');
+            }
+
+            return trimmed.Trim().TrimEnd('.');
+        }
+
+        private bool IsPreviewListFocused()
+        {
+            return listViewPreview.ContainsFocus || ActiveControl == listViewPreview;
         }
 
         private static bool TryUndoDeleteMoves(string sessionDir, IReadOnlyList<(string Orig, string Temp)> pairs)
@@ -1275,6 +1684,13 @@ namespace ImageConverter
                 }
             }
 
+            TryDeleteSessionDirectory(sessionDir);
+
+            return true;
+        }
+
+        private static void TryDeleteSessionDirectory(string sessionDir)
+        {
             try
             {
                 if (Directory.Exists(sessionDir))
@@ -1282,12 +1698,10 @@ namespace ImageConverter
                     Directory.Delete(sessionDir, true);
                 }
             }
-            catch
+            catch (IOException ex)
             {
-                // ignore cleanup failure if files are restored
+                Debug.WriteLine(ex);
             }
-
-            return true;
         }
 
         private void RegisterUndo(Func<bool> undo)
@@ -1298,7 +1712,9 @@ namespace ImageConverter
 
         private void UpdateUndoButtonEnabled()
         {
-            btnUndo.Enabled = !_conversionBusy && _undoLastOperation != null;
+            var enabled = !_conversionBusy && _undoLastOperation is not null;
+            btnUndo.Enabled = enabled;
+            menuFileUndo.Enabled = enabled;
         }
 
         private async Task UndoLastOperationAsync()
@@ -1345,33 +1761,71 @@ namespace ImageConverter
 
             if (listViewPreview.SelectedItems.Count > 0)
             {
-                _pendingBoldFileNameFromConvert = null;
                 statusLabelSelection.Visible = true;
                 var firstPath = listViewPreview.SelectedItems[0].Tag as string ?? "";
                 var name = Path.GetFileName(firstPath);
-                statusLabelSelection.Text = listViewPreview.SelectedItems.Count == 1
+                var displayName = listViewPreview.SelectedItems.Count == 1
                     ? name
                     : $"{name} (+{listViewPreview.SelectedItems.Count - 1} more)";
+
+                statusLabelSelection.Text = displayName;
+                if (!string.IsNullOrEmpty(firstPath))
+                {
+                    var version = ++_selectionInfoVersion;
+                    _ = UpdateSelectionStatusDetailsAsync(firstPath, displayName, version);
+                }
+
                 return;
             }
 
-            if (!string.IsNullOrEmpty(_pendingBoldFileNameFromConvert))
-            {
-                statusLabelSelection.Text = _pendingBoldFileNameFromConvert;
-                statusLabelSelection.Visible = true;
-                return;
-            }
+            _selectionInfoVersion++;
 
             statusLabelSelection.Text = "";
             statusLabelSelection.Visible = false;
         }
 
-        private void OpenDestinationForSelection()
+        private async Task UpdateSelectionStatusDetailsAsync(string path, string displayName, int version)
         {
-            var destFolder = txtDestFolder.Text.Trim();
-            if (string.IsNullOrEmpty(destFolder) || !Directory.Exists(destFolder))
+            var meta = await Task.Run(() => ImageFileMetadataReader.TryRead(path)).ConfigureAwait(true);
+            if (version != _selectionInfoVersion)
             {
-                MessageBox.Show(this, "Destination folder is missing or invalid.", "Open destination", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            statusLabelSelection.Text = meta is null
+                ? displayName
+                : FormatSelectionStatusText(displayName, meta.Value);
+        }
+
+        private static string FormatSelectionStatusText(string displayName, ImageFileMetadata meta)
+        {
+            var dimensions = meta.Width > 0 && meta.Height > 0
+                ? $"{meta.Width} × {meta.Height}"
+                : "—";
+            var modified = meta.LastModifiedLocal.ToString("g");
+            return $"{displayName}  ·  {dimensions}  ·  {FormatFileSize(meta.SizeBytes)}  ·  Modified {modified}";
+        }
+
+        private static string FormatFileSize(long bytes)
+        {
+            if (bytes < 1024)
+            {
+                return $"{bytes} B";
+            }
+
+            if (bytes < 1024 * 1024)
+            {
+                return $"{bytes / 1024.0:0.#} KB";
+            }
+
+            return $"{bytes / (1024.0 * 1024.0):0.##} MB";
+        }
+
+        private void OpenImageFolderInExplorer()
+        {
+            if (!TryNormalizeDirectoryPath(txtSourceFolder.Text.Trim(), out var folder))
+            {
+                MessageBox.Show(this, "Image folder is missing or invalid.", "Open folder", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -1379,13 +1833,13 @@ namespace ImageConverter
             {
                 Process.Start(new ProcessStartInfo
                 {
-                    FileName = destFolder,
+                    FileName = folder,
                     UseShellExecute = true
                 });
             }
             catch (Exception ex)
             {
-                MessageBox.Show(this, "Could not open Explorer: " + ex.Message, "Open destination", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(this, "Could not open Explorer: " + ex.Message, "Open folder", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -1398,9 +1852,6 @@ namespace ImageConverter
                 .ToList();
         }
 
-        /// <summary>
-        /// Selected thumbnail: Copy + Delete. Empty area or unselected thumbnail / placeholder: Paste only (when clipboard has an image).
-        /// </summary>
         private void PreviewContextMenuStrip_Opening(object? sender, CancelEventArgs e)
         {
             HideAllPreviewContextMenuItems();
@@ -1431,15 +1882,22 @@ namespace ImageConverter
 
         private void HideAllPreviewContextMenuItems()
         {
-            toolStripMenuItemPreviewCopy.Visible = false;
-            toolStripMenuItemPreviewPaste.Visible = false;
             toolStripMenuItemPreviewConvertTo.Visible = false;
             toolStripMenuItemConvertToQuickIcon.Visible = false;
+            toolStripSeparatorPreviewAfterConvert.Visible = false;
+            toolStripMenuItemPreviewCopy.Visible = false;
+            toolStripMenuItemPreviewCopyImagePath.Visible = false;
+            toolStripSeparatorPreviewAfterClipboard.Visible = false;
+            toolStripMenuItemPreviewRename.Visible = false;
             toolStripMenuItemPreviewDelete.Visible = false;
+            toolStripSeparatorPreviewAfterFileOps.Visible = false;
             toolStripMenuItemOpenSourceLocation.Visible = false;
+            toolStripSeparatorPreviewOpenWith.Visible = false;
+            toolStripMenuItemOpenWithPaint.Visible = false;
+            toolStripMenuItemOpenWithPaintDotNet.Visible = false;
+            toolStripMenuItemPreviewPaste.Visible = false;
         }
 
-        /// <returns>True if the placeholder branch handled the menu (caller should return).</returns>
         private bool TryOfferPasteOnlyPlaceholderMenu(Control? src, CancelEventArgs e)
         {
             if (src != lblPreviewPlaceholder)
@@ -1459,20 +1917,33 @@ namespace ImageConverter
 
         private void PopulatePreviewMenuForSelectedThumbnails()
         {
-            toolStripMenuItemPreviewCopy.Visible = true;
+            toolStripMenuItemConvertToQuickIcon.Visible = true;
             toolStripMenuItemPreviewConvertTo.Visible = true;
+            toolStripSeparatorPreviewAfterConvert.Visible = true;
+            toolStripMenuItemPreviewCopy.Visible = true;
+            toolStripMenuItemPreviewCopyImagePath.Visible = true;
+            toolStripSeparatorPreviewAfterClipboard.Visible = true;
+            toolStripMenuItemPreviewRename.Visible = true;
             toolStripMenuItemPreviewDelete.Visible = true;
+            toolStripSeparatorPreviewAfterFileOps.Visible = true;
             toolStripMenuItemOpenSourceLocation.Visible = true;
+            toolStripSeparatorPreviewOpenWith.Visible = true;
+            toolStripMenuItemOpenWithPaint.Visible = true;
+            toolStripMenuItemOpenWithPaintDotNet.Visible = true;
+
             toolStripMenuItemPreviewCopy.Enabled = listViewPreview.SelectedItems.Count > 0;
+            toolStripMenuItemPreviewRename.Enabled = listViewPreview.SelectedItems.Count == 1 && !_conversionBusy;
             toolStripMenuItemPreviewDelete.Enabled = listViewPreview.SelectedItems.Count > 0;
             toolStripMenuItemOpenSourceLocation.Enabled = listViewPreview.SelectedItems.Count > 0;
+            toolStripMenuItemPreviewCopyImagePath.Enabled = listViewPreview.SelectedItems.Count > 0;
+            toolStripMenuItemOpenWithPaint.Enabled = listViewPreview.SelectedItems.Count > 0;
+            toolStripMenuItemOpenWithPaintDotNet.Enabled = listViewPreview.SelectedItems.Count > 0
+                && ExternalImageEditorLauncher.IsPaintDotNetAvailable();
 
             var paths = GetSelectedSourcePaths();
             var convertOk = CanConvertSelection() && !_conversionBusy;
-            var icoFormatIndex = SupportedFormats.Count - 1;
-            var showQuickConvertToIcon = paths.Exists(p => !SupportedFormats.FormatIndexMatchesExtension(p, icoFormatIndex));
-            toolStripMenuItemConvertToQuickIcon.Visible = showQuickConvertToIcon;
-            toolStripMenuItemConvertToQuickIcon.Enabled = convertOk && showQuickConvertToIcon;
+            toolStripMenuItemConvertToQuickIcon.Visible = true;
+            toolStripMenuItemConvertToQuickIcon.Enabled = convertOk;
 
             toolStripMenuItemPreviewConvertTo.DropDownItems.Clear();
             foreach (var formatIdx in BuildAllowedConvertToFormatIndices(paths))
@@ -1511,14 +1982,30 @@ namespace ImageConverter
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (ActiveControl is TextBoxBase)
+            if (ShouldUseDefaultCommandKeyHandling(keyData))
             {
                 return base.ProcessCmdKey(ref msg, keyData);
             }
 
-            if (ActiveControl is ComboBox && keyData == (Keys.Control | Keys.C))
+            return TryHandleGlobalShortcut(keyData) || base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        private bool ShouldUseDefaultCommandKeyHandling(Keys keyData) =>
+            ActiveControl is TextBoxBase
+            || (ActiveControl is ComboBox && keyData == (Keys.Control | Keys.C));
+
+        private bool TryHandleGlobalShortcut(Keys keyData)
+        {
+            if (keyData == Keys.F5 && IsPreviewListFocused() && !_conversionBusy)
             {
-                return base.ProcessCmdKey(ref msg, keyData);
+                _ = ReloadPreviewKeepingSelectionAsync();
+                return true;
+            }
+
+            if (keyData == Keys.F2 && listViewPreview.SelectedItems.Count == 1 && !_conversionBusy)
+            {
+                _ = RenameSelectedPreviewFileAsync();
+                return true;
             }
 
             if (keyData == (Keys.Control | Keys.C) && listViewPreview.SelectedItems.Count > 0)
@@ -1529,7 +2016,7 @@ namespace ImageConverter
 
             if ((keyData == (Keys.Control | Keys.V) || keyData == (Keys.Control | Keys.P)) && Clipboard.ContainsImage())
             {
-                _ = PasteClipboardImageIntoSourceFolderAsync();
+                _ = PasteClipboardImageAsync();
                 return true;
             }
 
@@ -1545,7 +2032,7 @@ namespace ImageConverter
                 return true;
             }
 
-            return base.ProcessCmdKey(ref msg, keyData);
+            return false;
         }
 
         private void SetStatusMessage(string message)
