@@ -30,6 +30,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmAbout));
             pictureBox1 = new PictureBox();
+            btnSupport = new Button();
             btnOK = new Button();
             txtAbout = new TextBox();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
@@ -45,10 +46,22 @@
             pictureBox1.TabIndex = 0;
             pictureBox1.TabStop = false;
             // 
+            // btnSupport
+            // 
+            btnSupport.FlatStyle = FlatStyle.Popup;
+            btnSupport.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            btnSupport.Location = new Point(181, 279);
+            btnSupport.Name = "btnSupport";
+            btnSupport.Size = new Size(305, 41);
+            btnSupport.TabIndex = 3;
+            btnSupport.Text = "☕ Buy me a coffee";
+            btnSupport.UseVisualStyleBackColor = true;
+            btnSupport.Click += btnSupport_Click;
+            // 
             // btnOK
             // 
             btnOK.FlatStyle = FlatStyle.Popup;
-            btnOK.Location = new Point(446, 231);
+            btnOK.Location = new Point(492, 279);
             btnOK.Name = "btnOK";
             btnOK.Size = new Size(109, 41);
             btnOK.TabIndex = 1;
@@ -65,16 +78,17 @@
             txtAbout.Name = "txtAbout";
             txtAbout.ReadOnly = true;
             txtAbout.ScrollBars = ScrollBars.Vertical;
-            txtAbout.Size = new Size(387, 165);
+            txtAbout.Size = new Size(446, 218);
             txtAbout.TabIndex = 2;
-            txtAbout.Text = "Image Converter V1.0\r\n\r\nDeveloped by: Mohammed Abujayyab\r\nhttps://github.com/MohammedJayyab\r\n\r\nEmail:  moh.abujiab@gmail.com";
+            txtAbout.Text = "Image Converter V1.0\r\n\r\nDeveloped by: Mohammed Jayyab\r\nhttps://github.com/MohammedJayyab\r\n\r\nEmail: moh.abujiab@gmail.com\r\n\r\nIf this app helps you, consider buying me a coffee.";
             // 
             // frmAbout
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(582, 292);
+            ClientSize = new Size(643, 332);
             Controls.Add(txtAbout);
+            Controls.Add(btnSupport);
             Controls.Add(btnOK);
             Controls.Add(pictureBox1);
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
@@ -91,6 +105,7 @@
         #endregion
 
         private PictureBox pictureBox1;
+        private Button btnSupport;
         private Button btnOK;
         private TextBox txtAbout;
     }

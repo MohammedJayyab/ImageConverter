@@ -31,6 +31,8 @@
             menuFileExit = new ToolStripMenuItem();
             menuHelp = new ToolStripMenuItem();
             menuHelpHowToUse = new ToolStripMenuItem();
+            menuHelpSupport = new ToolStripMenuItem();
+            menuHelpSeparatorAbout = new ToolStripSeparator();
             menuHelpAbout = new ToolStripMenuItem();
             statusStripMain = new StatusStrip();
             statusLabelMessage = new ToolStripStatusLabel();
@@ -55,6 +57,9 @@
             contextMenuPreview = new ContextMenuStrip(components);
             toolStripMenuItemConvertToQuickIcon = new ToolStripMenuItem();
             toolStripMenuItemPreviewConvertTo = new ToolStripMenuItem();
+            toolStripMenuItemPreviewResize = new ToolStripMenuItem();
+            toolStripMenuItemPreviewResize2x = new ToolStripMenuItem();
+            toolStripMenuItemPreviewResize4x = new ToolStripMenuItem();
             toolStripSeparatorPreviewAfterConvert = new ToolStripSeparator();
             toolStripMenuItemPreviewCopy = new ToolStripMenuItem();
             toolStripMenuItemPreviewCopyImagePath = new ToolStripMenuItem();
@@ -87,107 +92,108 @@
             contextMenuPreview.SuspendLayout();
             flowPreviewToolbar.SuspendLayout();
             SuspendLayout();
-            //
+            // 
             // menuStripMain
-            //
+            // 
             menuStripMain.ImageScalingSize = new Size(20, 20);
             menuStripMain.Items.AddRange(new ToolStripItem[] { menuFile, menuHelp });
             menuStripMain.Location = new Point(10, 10);
             menuStripMain.Name = "menuStripMain";
-            menuStripMain.Padding = new Padding(6, 2, 0, 2);
-            menuStripMain.Size = new Size(1121, 32);
+            menuStripMain.Size = new Size(882, 33);
             menuStripMain.TabIndex = 3;
             menuStripMain.Text = "menuStripMain";
-            //
+            // 
             // menuFile
-            //
-            menuFile.DropDownItems.AddRange(new ToolStripItem[]
-            {
-                menuFileOpenFolder,
-                menuFileRefreshReview,
-                menuFileOpenFolderInExplorer,
-                menuFilePasteImage,
-                menuFileUndo,
-                menuFileSeparatorExit,
-                menuFileExit
-            });
+            // 
+            menuFile.DropDownItems.AddRange(new ToolStripItem[] { menuFileOpenFolder, menuFileRefreshReview, menuFileOpenFolderInExplorer, menuFilePasteImage, menuFileUndo, menuFileSeparatorExit, menuFileExit });
             menuFile.Name = "menuFile";
-            menuFile.Size = new Size(46, 28);
+            menuFile.Size = new Size(54, 29);
             menuFile.Text = "&File";
-            //
+            // 
             // menuFileOpenFolder
-            //
+            // 
             menuFileOpenFolder.Name = "menuFileOpenFolder";
             menuFileOpenFolder.ShortcutKeys = Keys.Control | Keys.O;
-            menuFileOpenFolder.Size = new Size(280, 34);
+            menuFileOpenFolder.Size = new Size(311, 34);
             menuFileOpenFolder.Text = "&Open folder…";
-            //
+            // 
             // menuFileRefreshReview
-            //
+            // 
             menuFileRefreshReview.Name = "menuFileRefreshReview";
             menuFileRefreshReview.ShortcutKeys = Keys.F5;
-            menuFileRefreshReview.Size = new Size(280, 34);
+            menuFileRefreshReview.Size = new Size(311, 34);
             menuFileRefreshReview.Text = "&Refresh review";
-            //
+            // 
             // menuFileOpenFolderInExplorer
-            //
+            // 
             menuFileOpenFolderInExplorer.Name = "menuFileOpenFolderInExplorer";
-            menuFileOpenFolderInExplorer.Size = new Size(280, 34);
+            menuFileOpenFolderInExplorer.Size = new Size(311, 34);
             menuFileOpenFolderInExplorer.Text = "Open folder in &Explorer…";
-            //
+            // 
             // menuFilePasteImage
-            //
+            // 
             menuFilePasteImage.Name = "menuFilePasteImage";
             menuFilePasteImage.ShortcutKeys = Keys.Control | Keys.V;
-            menuFilePasteImage.Size = new Size(280, 34);
+            menuFilePasteImage.Size = new Size(311, 34);
             menuFilePasteImage.Text = "&Paste image";
-            //
+            // 
             // menuFileUndo
-            //
+            // 
             menuFileUndo.Name = "menuFileUndo";
             menuFileUndo.ShortcutKeys = Keys.Control | Keys.Z;
-            menuFileUndo.Size = new Size(280, 34);
+            menuFileUndo.Size = new Size(311, 34);
             menuFileUndo.Text = "&Undo";
-            //
+            // 
             // menuFileSeparatorExit
-            //
+            // 
             menuFileSeparatorExit.Name = "menuFileSeparatorExit";
-            menuFileSeparatorExit.Size = new Size(277, 6);
-            //
+            menuFileSeparatorExit.Size = new Size(308, 6);
+            // 
             // menuFileExit
-            //
+            // 
             menuFileExit.Name = "menuFileExit";
             menuFileExit.ShortcutKeys = Keys.Alt | Keys.F4;
-            menuFileExit.Size = new Size(280, 34);
+            menuFileExit.Size = new Size(311, 34);
             menuFileExit.Text = "E&xit";
-            //
+            // 
             // menuHelp
-            //
-            menuHelp.DropDownItems.AddRange(new ToolStripItem[] { menuHelpHowToUse, menuHelpAbout });
+            // 
+            menuHelp.DropDownItems.AddRange(new ToolStripItem[] { menuHelpHowToUse, menuHelpSupport, menuHelpSeparatorAbout, menuHelpAbout });
             menuHelp.Name = "menuHelp";
-            menuHelp.Size = new Size(55, 28);
+            menuHelp.Size = new Size(65, 29);
             menuHelp.Text = "&Help";
-            //
+            // 
             // menuHelpHowToUse
-            //
+            // 
             menuHelpHowToUse.Name = "menuHelpHowToUse";
-            menuHelpHowToUse.Size = new Size(240, 34);
+            menuHelpHowToUse.Size = new Size(336, 34);
             menuHelpHowToUse.Text = "&How to use…";
-            //
+            // 
+            // menuHelpSupport
+            // 
+            menuHelpSupport.Name = "menuHelpSupport";
+            menuHelpSupport.Size = new Size(336, 34);
+            menuHelpSupport.Text = "☕ &Support the developer…";
+            // 
+            // menuHelpSeparatorAbout
+            // 
+            menuHelpSeparatorAbout.Name = "menuHelpSeparatorAbout";
+            menuHelpSeparatorAbout.Size = new Size(333, 6);
+            // 
             // menuHelpAbout
-            //
+            // 
             menuHelpAbout.Name = "menuHelpAbout";
-            menuHelpAbout.Size = new Size(240, 34);
+            menuHelpAbout.Size = new Size(336, 34);
             menuHelpAbout.Text = "&About…";
             // 
             // statusStripMain
             // 
             statusStripMain.ImageScalingSize = new Size(20, 20);
             statusStripMain.Items.AddRange(new ToolStripItem[] { statusLabelMessage, statusLabelSelection, toolStripProgressBatch, statusLabelSpring });
-            statusStripMain.Location = new Point(10, 856);
+            statusStripMain.Location = new Point(10, 781);
             statusStripMain.Name = "statusStripMain";
             statusStripMain.Padding = new Padding(1, 0, 16, 0);
-            statusStripMain.Size = new Size(1121, 32);
+            statusStripMain.Size = new Size(882, 32);
             statusStripMain.TabIndex = 0;
             statusStripMain.Text = "statusStripMain";
             // 
@@ -219,7 +225,7 @@
             // statusLabelSpring
             // 
             statusLabelSpring.Name = "statusLabelSpring";
-            statusLabelSpring.Size = new Size(1044, 25);
+            statusLabelSpring.Size = new Size(805, 25);
             statusLabelSpring.Spring = true;
             // 
             // flowActions
@@ -228,10 +234,10 @@
             flowActions.Controls.Add(btnUndo);
             flowActions.Controls.Add(btnCancel);
             flowActions.Dock = DockStyle.Bottom;
-            flowActions.Location = new Point(10, 796);
+            flowActions.Location = new Point(10, 721);
             flowActions.Name = "flowActions";
             flowActions.Padding = new Padding(0, 8, 0, 8);
-            flowActions.Size = new Size(1121, 60);
+            flowActions.Size = new Size(882, 60);
             flowActions.TabIndex = 2;
             flowActions.WrapContents = false;
             // 
@@ -263,7 +269,7 @@
             // splitReview
             // 
             splitReview.Dock = DockStyle.Fill;
-            splitReview.Location = new Point(10, 10);
+            splitReview.Location = new Point(10, 43);
             splitReview.Name = "splitReview";
             splitReview.Orientation = Orientation.Horizontal;
             // 
@@ -277,8 +283,8 @@
             // 
             splitReview.Panel2.Controls.Add(grpPreview);
             splitReview.Panel2MinSize = 140;
-            splitReview.Size = new Size(1121, 786);
-            splitReview.SplitterDistance = 198;
+            splitReview.Size = new Size(882, 678);
+            splitReview.SplitterDistance = 170;
             splitReview.SplitterWidth = 8;
             splitReview.TabIndex = 1;
             // 
@@ -288,11 +294,11 @@
             grpFolders.Controls.Add(txtSourceFolder);
             grpFolders.Controls.Add(btnBrowseSource);
             grpFolders.Dock = DockStyle.Top;
-            grpFolders.Location = new Point(0, 72);
+            grpFolders.Location = new Point(0, 92);
             grpFolders.Margin = new Padding(0, 0, 0, 8);
             grpFolders.Name = "grpFolders";
             grpFolders.Padding = new Padding(10, 11, 10, 11);
-            grpFolders.Size = new Size(1121, 84);
+            grpFolders.Size = new Size(882, 84);
             grpFolders.TabIndex = 0;
             grpFolders.TabStop = false;
             grpFolders.Text = "Image folder";
@@ -302,7 +308,7 @@
             lblSourceFolder.AutoSize = true;
             lblSourceFolder.Location = new Point(13, 40);
             lblSourceFolder.Name = "lblSourceFolder";
-            lblSourceFolder.Size = new Size(58, 25);
+            lblSourceFolder.Size = new Size(62, 25);
             lblSourceFolder.TabIndex = 0;
             lblSourceFolder.Text = "Folder";
             // 
@@ -313,7 +319,7 @@
             txtSourceFolder.Margin = new Padding(3, 4, 10, 4);
             txtSourceFolder.Name = "txtSourceFolder";
             txtSourceFolder.ReadOnly = true;
-            txtSourceFolder.Size = new Size(848, 31);
+            txtSourceFolder.Size = new Size(609, 31);
             txtSourceFolder.TabIndex = 1;
             txtSourceFolder.TabStop = false;
             // 
@@ -321,9 +327,9 @@
             // 
             btnBrowseSource.Anchor = AnchorStyles.Top | AnchorStyles.Right;
             btnBrowseSource.AutoSize = true;
-            btnBrowseSource.Location = new Point(1008, 35);
+            btnBrowseSource.Location = new Point(769, 35);
             btnBrowseSource.Name = "btnBrowseSource";
-            btnBrowseSource.Size = new Size(97, 35);
+            btnBrowseSource.Size = new Size(102, 35);
             btnBrowseSource.TabIndex = 2;
             btnBrowseSource.Text = "&Browse…";
             btnBrowseSource.UseVisualStyleBackColor = true;
@@ -339,26 +345,27 @@
             grpBackground.Margin = new Padding(0, 0, 0, 8);
             grpBackground.Name = "grpBackground";
             grpBackground.Padding = new Padding(10, 11, 10, 11);
-            grpBackground.Size = new Size(1121, 72);
+            grpBackground.Size = new Size(882, 92);
             grpBackground.TabIndex = 2;
             grpBackground.TabStop = false;
-            grpBackground.Text = "ICO canvas (letterbox)";
+            grpBackground.Text = "Canvas & background";
+            grpBackground.Enter += grpBackground_Enter;
             // 
             // lblCanvasFill
             // 
             lblCanvasFill.AutoSize = true;
-            lblCanvasFill.Location = new Point(13, 31);
+            lblCanvasFill.Location = new Point(20, 47);
             lblCanvasFill.Name = "lblCanvasFill";
-            lblCanvasFill.Size = new Size(135, 25);
+            lblCanvasFill.Size = new Size(111, 25);
             lblCanvasFill.TabIndex = 0;
-            lblCanvasFill.Text = "Letterbox color:";
+            lblCanvasFill.Text = "Background:";
             // 
             // cmbIcoOutputSize
             // 
             cmbIcoOutputSize.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbIcoOutputSize.FormattingEnabled = true;
             cmbIcoOutputSize.Items.AddRange(new object[] { "16 × 16", "32 × 32", "48 × 48", "64 × 64", "128 × 128", "256 × 256" });
-            cmbIcoOutputSize.Location = new Point(444, 24);
+            cmbIcoOutputSize.Location = new Point(479, 43);
             cmbIcoOutputSize.Name = "cmbIcoOutputSize";
             cmbIcoOutputSize.Size = new Size(220, 33);
             cmbIcoOutputSize.TabIndex = 2;
@@ -366,7 +373,7 @@
             // lblIcoOutputSize
             // 
             lblIcoOutputSize.AutoSize = true;
-            lblIcoOutputSize.Location = new Point(293, 28);
+            lblIcoOutputSize.Location = new Point(342, 47);
             lblIcoOutputSize.Name = "lblIcoOutputSize";
             lblIcoOutputSize.Size = new Size(139, 25);
             lblIcoOutputSize.TabIndex = 1;
@@ -376,10 +383,10 @@
             // 
             cmbSolidColor.DropDownStyle = ComboBoxStyle.DropDownList;
             cmbSolidColor.FormattingEnabled = true;
-            cmbSolidColor.Items.AddRange(new object[] { "White", "Black" });
-            cmbSolidColor.Location = new Point(158, 27);
+            cmbSolidColor.Items.AddRange(new object[] { "White", "Black", "Transparent" });
+            cmbSolidColor.Location = new Point(137, 43);
             cmbSolidColor.Name = "cmbSolidColor";
-            cmbSolidColor.Size = new Size(120, 33);
+            cmbSolidColor.Size = new Size(167, 33);
             cmbSolidColor.TabIndex = 1;
             // 
             // grpPreview
@@ -391,7 +398,7 @@
             grpPreview.Location = new Point(0, 0);
             grpPreview.Name = "grpPreview";
             grpPreview.Padding = new Padding(10, 11, 10, 11);
-            grpPreview.Size = new Size(1121, 540);
+            grpPreview.Size = new Size(882, 500);
             grpPreview.TabIndex = 0;
             grpPreview.TabStop = false;
             grpPreview.Text = "Review / preview";
@@ -405,7 +412,7 @@
             listViewPreview.Location = new Point(10, 84);
             listViewPreview.Name = "listViewPreview";
             listViewPreview.OwnerDraw = true;
-            listViewPreview.Size = new Size(1101, 445);
+            listViewPreview.Size = new Size(862, 405);
             listViewPreview.TabIndex = 0;
             listViewPreview.TileSize = new Size(120, 140);
             listViewPreview.UseCompatibleStateImageBehavior = false;
@@ -414,25 +421,9 @@
             // contextMenuPreview
             // 
             contextMenuPreview.ImageScalingSize = new Size(24, 24);
-            contextMenuPreview.Items.AddRange(new ToolStripItem[]
-            {
-                toolStripMenuItemConvertToQuickIcon,
-                toolStripMenuItemPreviewConvertTo,
-                toolStripSeparatorPreviewAfterConvert,
-                toolStripMenuItemPreviewCopy,
-                toolStripMenuItemPreviewCopyImagePath,
-                toolStripSeparatorPreviewAfterClipboard,
-                toolStripMenuItemPreviewRename,
-                toolStripMenuItemPreviewDelete,
-                toolStripSeparatorPreviewAfterFileOps,
-                toolStripMenuItemOpenSourceLocation,
-                toolStripSeparatorPreviewOpenWith,
-                toolStripMenuItemOpenWithPaint,
-                toolStripMenuItemOpenWithPaintDotNet,
-                toolStripMenuItemPreviewPaste
-            });
+            contextMenuPreview.Items.AddRange(new ToolStripItem[] { toolStripMenuItemConvertToQuickIcon, toolStripMenuItemPreviewConvertTo, toolStripMenuItemPreviewResize, toolStripSeparatorPreviewAfterConvert, toolStripMenuItemPreviewCopy, toolStripMenuItemPreviewCopyImagePath, toolStripSeparatorPreviewAfterClipboard, toolStripMenuItemPreviewRename, toolStripMenuItemPreviewDelete, toolStripSeparatorPreviewAfterFileOps, toolStripMenuItemOpenSourceLocation, toolStripSeparatorPreviewOpenWith, toolStripMenuItemOpenWithPaint, toolStripMenuItemOpenWithPaintDotNet, toolStripMenuItemPreviewPaste });
             contextMenuPreview.Name = "contextMenuPreview";
-            contextMenuPreview.Size = new Size(232, 298);
+            contextMenuPreview.Size = new Size(232, 348);
             // 
             // toolStripMenuItemConvertToQuickIcon
             // 
@@ -449,6 +440,26 @@
             toolStripMenuItemPreviewConvertTo.Size = new Size(231, 32);
             toolStripMenuItemPreviewConvertTo.Text = "&Convert to";
             toolStripMenuItemPreviewConvertTo.Visible = false;
+            // 
+            // toolStripMenuItemPreviewResize
+            // 
+            toolStripMenuItemPreviewResize.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItemPreviewResize2x, toolStripMenuItemPreviewResize4x });
+            toolStripMenuItemPreviewResize.Name = "toolStripMenuItemPreviewResize";
+            toolStripMenuItemPreviewResize.Size = new Size(231, 32);
+            toolStripMenuItemPreviewResize.Text = "&Resize";
+            toolStripMenuItemPreviewResize.Visible = false;
+            // 
+            // toolStripMenuItemPreviewResize2x
+            // 
+            toolStripMenuItemPreviewResize2x.Name = "toolStripMenuItemPreviewResize2x";
+            toolStripMenuItemPreviewResize2x.Size = new Size(200, 32);
+            toolStripMenuItemPreviewResize2x.Text = "&2×";
+            // 
+            // toolStripMenuItemPreviewResize4x
+            // 
+            toolStripMenuItemPreviewResize4x.Name = "toolStripMenuItemPreviewResize4x";
+            toolStripMenuItemPreviewResize4x.Size = new Size(200, 32);
+            toolStripMenuItemPreviewResize4x.Text = "&4×";
             // 
             // toolStripSeparatorPreviewAfterConvert
             // 
@@ -545,7 +556,7 @@
             lblPreviewPlaceholder.ForeColor = SystemColors.GrayText;
             lblPreviewPlaceholder.Location = new Point(10, 84);
             lblPreviewPlaceholder.Name = "lblPreviewPlaceholder";
-            lblPreviewPlaceholder.Size = new Size(1101, 445);
+            lblPreviewPlaceholder.Size = new Size(862, 405);
             lblPreviewPlaceholder.TabIndex = 1;
             lblPreviewPlaceholder.Text = "Choose an image folder or drop files / a folder here. Thumbnails appear when images are loaded.";
             lblPreviewPlaceholder.TextAlign = ContentAlignment.MiddleCenter;
@@ -561,7 +572,7 @@
             flowPreviewToolbar.Location = new Point(10, 35);
             flowPreviewToolbar.Name = "flowPreviewToolbar";
             flowPreviewToolbar.Padding = new Padding(0, 0, 0, 6);
-            flowPreviewToolbar.Size = new Size(1101, 49);
+            flowPreviewToolbar.Size = new Size(862, 49);
             flowPreviewToolbar.TabIndex = 2;
             flowPreviewToolbar.WrapContents = false;
             // 
@@ -610,7 +621,7 @@
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1141, 898);
+            ClientSize = new Size(902, 823);
             Controls.Add(splitReview);
             Controls.Add(flowActions);
             Controls.Add(statusStripMain);
@@ -660,6 +671,8 @@
         private ToolStripMenuItem menuFileExit;
         private ToolStripMenuItem menuHelp;
         private ToolStripMenuItem menuHelpHowToUse;
+        private ToolStripMenuItem menuHelpSupport;
+        private ToolStripSeparator menuHelpSeparatorAbout;
         private ToolStripMenuItem menuHelpAbout;
         private StatusStrip statusStripMain;
         private ToolStripStatusLabel statusLabelMessage;
@@ -685,6 +698,9 @@
         private Button btnOpenFolder;
         private ContextMenuStrip contextMenuPreview;
         private ToolStripMenuItem toolStripMenuItemPreviewConvertTo;
+        private ToolStripMenuItem toolStripMenuItemPreviewResize;
+        private ToolStripMenuItem toolStripMenuItemPreviewResize2x;
+        private ToolStripMenuItem toolStripMenuItemPreviewResize4x;
         private ToolStripMenuItem toolStripMenuItemConvertToQuickIcon;
         private ToolStripSeparator toolStripSeparatorPreviewAfterConvert;
         private ToolStripMenuItem toolStripMenuItemPreviewCopy;

@@ -10,9 +10,17 @@
 3.\tab Select one or more images.\par
 \pard\sa200\sl276\slmult1\b Converting\b0\par
 \pard\sa100\fi-360\li720\bullet\tab Right-click a selected thumbnail \endash  Convert to \endash  pick a format.\par
-\bullet\tab Convert to Icon creates or rebuilds .ico files using the ICO size and letterbox settings at the top.\par
+\bullet\tab Resize \endash  2x or 4x saves a new file beside the original: same name with _scaled before the extension (e.g. photo_scaled.png). JPEG, PNG, BMP, GIF, WEBP, and ICO only.\par
+\bullet\tab Convert to Icon creates or rebuilds .ico files using the ICO size and background settings at the top (white, black, or transparent letterbox).\par
+\bullet\tab Set Background to Transparent for PNG, GIF, WEBP, ICO, or SVG to keep or add transparency (JPG and BMP do not support it).\par
 \bullet\tab New files are saved in the same folder (same name, new extension) and selected after convert.\par
 \bullet\tab If a file already exists, you are asked to confirm overwrite.\par
+\pard\sa200\sl276\slmult1\b SVG output (important)\b0\par
+\pard\sa100\fi-360\li720\bullet\tab Convert to SVG does \b not\b0  vector-trace your image (no paths or shapes are created).\par
+\bullet\tab The app saves the picture as PNG data inside a standard .svg file (an embedded image tag with base64 data).\par
+\bullet\tab The file opens as SVG everywhere, but it is still a bitmap: zooming in will show pixels, and vector editors will not give you editable outlines from it.\par
+\bullet\tab Use this when you need a .svg file for a tool or workflow; use PNG or WEBP for normal photos; use a vector tracer (e.g. Inkscape) if you need real scalable paths.\par
+\bullet\tab If the source is already a vector .svg, it is rasterized first, then wrapped again \endash  original paths are not kept.\par
 \pard\sa200\sl276\slmult1\b Other actions (right-click or File menu)\b0\par
 \pard\sa100\fi-360\li720\bullet\tab Copy / Copy image path\par
 \bullet\tab Rename (F2)\par

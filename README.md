@@ -20,15 +20,33 @@ Converted files are written **into the same folder** (same name, new extension) 
 
 **File** — Open folder (Ctrl+O) · Refresh review (F5) · Open folder in Explorer · Paste image (Ctrl+V) · Undo (Ctrl+Z) · Exit
 
-**Help** — How to use (guide loaded from `HelpHowToUse.rtf`) · About
+**Help** — How to use (guide loaded from `HelpHowToUse.rtf`) · Support the developer · About
 
 ## Formats
 
 **JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF**
 
-- **ICO** — square size 16–256 px; white or black letterbox; largest frame when reading multi-size icons.
-- **SVG** — embedded PNG (not vector tracing).
-- **PDF** — single-page image via ImageMagick.
+- **ICO** — square size 16–256 px; white, black, or transparent letterbox; largest frame when reading multi-size icons.
+- **Transparent background** — choose **Transparent** in the background dropdown for PNG, GIF, WEBP, ICO, and SVG (preserves alpha; on opaque images, near-white areas are keyed out).
+- **SVG** — see [SVG output](#svg-output) below (embedded image, not vector tracing).
+- **PDF** — single-page raster image via ImageMagick.
+
+### SVG output
+
+**Convert to → SVG** does **not** trace the picture into vector paths. The app:
+
+1. Loads the source as a bitmap (via ImageMagick).
+2. Encodes it as **PNG** (respecting **Transparent** background when set).
+3. Writes a valid `.svg` file that contains only an `<image>` tag with that PNG as **base64** data.
+
+So the result is a **`.svg` wrapper around a raster image** — same pixels as a PNG, not editable curves in Illustrator/Inkscape. Zooming in far will still look pixelated.
+
+| Use SVG here when… | Prefer PNG/WebP instead when… |
+|--------------------|-------------------------------|
+| A tool or site requires a `.svg` file but fixed resolution is fine | You only need a raster asset |
+| You want one file that opens in browsers as SVG | You need true vector paths or smallest size for photos |
+
+**Note:** If the source is already a vector `.svg`, it is rasterized during conversion, then wrapped again — original paths are not preserved.
 
 ## Review list
 
@@ -40,9 +58,17 @@ Converted files are written **into the same folder** (same name, new extension) 
 
 ## Context menu
 
-**Convert to Icon** · **Convert to** (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF) · Copy · Copy image path · Rename · Delete · Open file location · Open by Paint · Open by Paint.NET
+**Convert to Icon** · **Convert to** (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF) · **Resize** (2× or 4×, saves as `name_scaled.ext`) · Copy · Copy image path · Rename · Delete · Open file location · Open by Paint · Open by Paint.NET
 
 Existing output files trigger an overwrite prompt. The **Convert to** submenu skips formats the selection already uses.
+
+## Donate
+
+If you find this project helpful, consider buying me a coffee to support its development:
+
+<a href="https://buymeacoffee.com/mjayyab">
+  <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" width="217" alt="Buy Me A Coffee" />
+</a>
 
 ## Notes
 

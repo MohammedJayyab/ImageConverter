@@ -3,5 +3,6 @@ namespace ImageConverter;
 internal enum IconBackgroundKind
 {
     SolidWhite,
-    SolidBlack
+    SolidBlack,
+    Transparent
 }

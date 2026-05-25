@@ -124,7 +124,7 @@ internal static class ImageConversion
         using var img = new MagickImage(request.SourcePath);
         img.Format = outFmt;
         ApplyQualityHints(img, outFmt);
-        FlattenIfNeededForOpaque(img, outFmt);
+        ApplyOutputBackground(img, outFmt, request.IconBackground);
         img.Write(request.DestinationPath);
         return 0;
     }
@@ -134,6 +134,7 @@ internal static class ImageConversion
         errorMessage = null;
         cancellationToken.ThrowIfCancellationRequested();
         using var img = new MagickImage(request.SourcePath);
+        ApplyOutputBackground(img, MagickFormat.Png, request.IconBackground);
         WriteEmbeddedSvgFromMagickImage(img, request.DestinationPath);
         return 0;
     }
@@ -153,6 +154,7 @@ internal static class ImageConversion
         cancellationToken.ThrowIfCancellationRequested();
         var best = SelectLargestFrame(collection);
         using var output = (MagickImage)best.Clone();
+        ApplyOutputBackground(output, MagickFormat.Png, request.IconBackground);
         WriteEmbeddedSvgFromMagickImage(output, request.DestinationPath);
         return 0;
     }
@@ -224,6 +226,33 @@ internal static class ImageConversion
         }
     }
 
+    private static void ApplyOutputBackground(MagickImage img, MagickFormat fmt, IconBackgroundKind background)
+    {
+        if (background == IconBackgroundKind.Transparent)
+        {
+            if (fmt == MagickFormat.Jpeg || fmt == MagickFormat.Bmp)
+            {
+                return;
+            }
+
+            PreserveTransparentBackground(img);
+            return;
+        }
+
+        FlattenIfNeededForOpaque(img, fmt);
+    }
+
+    private static void PreserveTransparentBackground(MagickImage img)
+    {
+        if (img.HasAlpha)
+        {
+            return;
+        }
+
+        img.ColorFuzz = new Percentage(12);
+        img.Transparent(MagickColors.White);
+    }
+
     private static void FlattenIfNeededForOpaque(MagickImage img, MagickFormat fmt)
     {
         if (fmt != MagickFormat.Jpeg && fmt != MagickFormat.Bmp)
@@ -275,7 +304,7 @@ internal static class ImageConversion
         using var output = (MagickImage)best.Clone();
         output.Format = outFmt;
         ApplyQualityHints(output, outFmt);
-        FlattenIfNeededForOpaque(output, outFmt);
+        ApplyOutputBackground(output, outFmt, request.IconBackground);
         output.Write(request.DestinationPath);
         return 0;
     }
@@ -349,6 +378,7 @@ internal static class ImageConversion
         {
             IconBackgroundKind.SolidWhite => MagickColors.White,
             IconBackgroundKind.SolidBlack => MagickColors.Black,
+            IconBackgroundKind.Transparent => MagickColors.Transparent,
             _ => MagickColors.White
         };
     }
