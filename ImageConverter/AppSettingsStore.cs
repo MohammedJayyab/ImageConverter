@@ -163,6 +163,9 @@ internal sealed class AppSettingsStore
                     }
 
                     break;
+                case "EnableExplorerConvertMenu":
+                    s.EnableExplorerConvertMenu = ParseBool(value);
+                    break;
             }
         }
     }
@@ -225,6 +228,7 @@ internal sealed class AppSettingsStore
         sb.AppendLine($"PreviewSplitterDistance={settings.PreviewSplitterDistance.ToString(CultureInfo.InvariantCulture)}");
         sb.AppendLine($"IcoOutputSizeIndex={settings.IcoOutputSizeIndex.ToString(CultureInfo.InvariantCulture)}");
         sb.AppendLine($"SolidColorIndex={settings.SolidColorIndex.ToString(CultureInfo.InvariantCulture)}");
+        sb.AppendLine($"EnableExplorerConvertMenu={(settings.EnableExplorerConvertMenu ? "true" : "false")}");
         var content = sb.ToString();
 
         var dir = Path.GetDirectoryName(_filePath);

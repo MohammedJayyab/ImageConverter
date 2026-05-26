@@ -39,6 +39,7 @@ namespace ImageConverter
             EnableControlDoubleBuffering(listViewPreview);
             PopulatePreviewSizeCombo();
             ApplySettingsToUi();
+            SyncExplorerConvertMenuFromSettings();
             UpdatePlaceholderVisibility();
             SetStatusMessage("Ready");
             _ = InitialPreviewLoadAsync();
@@ -138,6 +139,18 @@ namespace ImageConverter
                     SchedulePersistUiSettings();
                 }
             };
+            chkEnableExplorerConvertMenu.CheckedChanged += (_, _) =>
+            {
+                if (_loadingUiSettings)
+                {
+                    return;
+                }
+
+                _settings.EnableExplorerConvertMenu = chkEnableExplorerConvertMenu.Checked;
+                SyncExplorerConvertMenuFromSettings();
+                SchedulePersistUiSettings();
+            };
+            btnRefreshExplorerConverterMenu.Click += (_, _) => RefreshExplorerConverterMenu();
             splitReview.SplitterMoved += (_, _) =>
             {
                 if (!_applyingSavedSplitterDistance)
@@ -201,6 +214,8 @@ namespace ImageConverter
                     cmbSolidColor.SelectedIndex = solidIdx;
                 }
 
+                chkEnableExplorerConvertMenu.Checked = _settings.EnableExplorerConvertMenu;
+
                 if (_settings.MainWindowPlacementSaved)
                 {
                     var w = Math.Max(MinimumSize.Width, _settings.MainWindowWidth);
@@ -217,12 +232,41 @@ namespace ImageConverter
             }
         }
 
+        private void SyncExplorerConvertMenuFromSettings()
+        {
+            try
+            {
+                ExplorerShellRegistry.Sync(_settings.EnableExplorerConvertMenu, Application.ExecutablePath);
+            }
+            catch (Exception ex)
+            {
+                SetStatusMessage("Converter To menu: " + ex.Message);
+            }
+        }
+
+        private void RefreshExplorerConverterMenu()
+        {
+            SyncExplorerConvertMenuFromSettings();
+            SetStatusMessage("Explorer Converter To menu refreshed.");
+
+            MessageBox.Show(
+                this,
+                "Explorer menu updated.\r\n\r\n" +
+                "Right-click an image → Convert to ▶ → pick BMP, PNG, JPEG, …\r\n\r\n" +
+                "Close all File Explorer windows, then open a new one.\r\n" +
+                "If there is no ▶ arrow, run the app once as Administrator so submenu verbs can register.",
+                "Convert to",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+
         private void PersistSettings()
         {
             _settings.LastFolder = txtSourceFolder.Text.Trim();
             _settings.PreviewThumbnailSizeIndex = cmbPreviewSize.SelectedIndex >= 0 ? Math.Clamp(cmbPreviewSize.SelectedIndex, 0, 2) : 1;
             _settings.IcoOutputSizeIndex = cmbIcoOutputSize.SelectedIndex >= 0 ? Math.Clamp(cmbIcoOutputSize.SelectedIndex, 0, IcoOutputSizeValues.Length - 1) : 5;
             _settings.SolidColorIndex = cmbSolidColor.SelectedIndex >= 0 ? Math.Clamp(cmbSolidColor.SelectedIndex, 0, 2) : 0;
+            _settings.EnableExplorerConvertMenu = chkEnableExplorerConvertMenu.Checked;
             _settings.MainWindowPlacementSaved = true;
 
             var bounds = WindowState == FormWindowState.Normal ? Bounds : RestoreBounds;

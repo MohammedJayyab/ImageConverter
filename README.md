@@ -56,7 +56,18 @@ So the result is a **`.svg` wrapper around a raster image** — same pixels as a
 - Status bar: name, size, dimensions, last modified.
 - **Ctrl+C** — copy path; **Ctrl+V** / **Ctrl+P** — paste image into the folder.
 
-## Context menu
+## Convert to (Windows Explorer)
+
+Convert from **File Explorer** without opening the main app (same folder, new extension).
+
+Right-click an image → **Convert to** ▶ → choose **PNG (.png)**, **JPEG (.jpg)**, etc.
+
+Uses the Windows **SubCommands** cascade (parent menu + format submenu). If the submenu does not appear, use **Refresh Explorer menu**; registering format verbs under `HKLM` may require running the app **once as Administrator**.
+
+- Toggle: **Windows Explorer** → **Add “Converter To” to Windows Explorer right-click menu** (on by default).
+- ICO size and background use `config.ini` (same as the main app).
+
+## Context menu (in-app review list)
 
 **Convert to Icon** · **Convert to** (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF) · **Resize** (0.5×, 0.75×, 2×, or 4×, saves as `name_scaled.ext`) · Copy · Copy image path · Rename · Delete · Open file location · Open by Paint · Open by Paint.NET
 
@@ -73,7 +84,7 @@ If you find this project helpful, consider buying me a coffee to support its dev
 ## Notes
 
 - The image folder must not be a drive root (e.g. `C:\`).
-- Settings persist in **`%AppData%\Image Converter\config.ini`** (folder path, window layout, thumbnail size, ICO options).
+- Settings persist in **`%AppData%\Image Converter\config.ini`** (folder path, window layout, thumbnail size, ICO options, Explorer **Converter To** menu).
 - **`HelpHowToUse.rtf`** is copied to the output folder on build; edit it in the project to change the Help guide.
 - Depends on [Magick.NET-Q16-AnyCPU](https://www.nuget.org/packages/Magick.NET-Q16-AnyCPU).
 

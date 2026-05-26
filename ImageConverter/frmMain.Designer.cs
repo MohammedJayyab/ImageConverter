@@ -55,6 +55,9 @@
             cmbIcoOutputSize = new ComboBox();
             lblIcoOutputSize = new Label();
             cmbSolidColor = new ComboBox();
+            grpExplorer = new GroupBox();
+            chkEnableExplorerConvertMenu = new CheckBox();
+            btnRefreshExplorerConverterMenu = new Button();
             grpPreview = new GroupBox();
             listViewPreview = new ListView();
             contextMenuPreview = new ContextMenuStrip(components);
@@ -94,6 +97,7 @@
             splitReview.SuspendLayout();
             grpFolders.SuspendLayout();
             grpBackground.SuspendLayout();
+            grpExplorer.SuspendLayout();
             grpPreview.SuspendLayout();
             contextMenuPreview.SuspendLayout();
             flowPreviewToolbar.SuspendLayout();
@@ -212,7 +216,7 @@
             // 
             statusStripMain.ImageScalingSize = new Size(20, 20);
             statusStripMain.Items.AddRange(new ToolStripItem[] { statusLabelMessage, statusLabelSelection, toolStripProgressBatch, statusLabelSpring });
-            statusStripMain.Location = new Point(10, 781);
+            statusStripMain.Location = new Point(10, 857);
             statusStripMain.Name = "statusStripMain";
             statusStripMain.Padding = new Padding(1, 0, 16, 0);
             statusStripMain.Size = new Size(882, 32);
@@ -256,7 +260,7 @@
             flowActions.Controls.Add(btnUndo);
             flowActions.Controls.Add(btnCancel);
             flowActions.Dock = DockStyle.Bottom;
-            flowActions.Location = new Point(10, 721);
+            flowActions.Location = new Point(10, 797);
             flowActions.Name = "flowActions";
             flowActions.Padding = new Padding(0, 8, 0, 8);
             flowActions.Size = new Size(882, 60);
@@ -299,14 +303,15 @@
             // 
             splitReview.Panel1.Controls.Add(grpFolders);
             splitReview.Panel1.Controls.Add(grpBackground);
-            splitReview.Panel1MinSize = 140;
+            splitReview.Panel1.Controls.Add(grpExplorer);
+            splitReview.Panel1MinSize = 210;
             // 
             // splitReview.Panel2
             // 
             splitReview.Panel2.Controls.Add(grpPreview);
             splitReview.Panel2MinSize = 140;
-            splitReview.Size = new Size(882, 678);
-            splitReview.SplitterDistance = 170;
+            splitReview.Size = new Size(882, 754);
+            splitReview.SplitterDistance = 243;
             splitReview.SplitterWidth = 8;
             splitReview.TabIndex = 1;
             // 
@@ -316,7 +321,7 @@
             grpFolders.Controls.Add(txtSourceFolder);
             grpFolders.Controls.Add(btnBrowseSource);
             grpFolders.Dock = DockStyle.Top;
-            grpFolders.Location = new Point(0, 92);
+            grpFolders.Location = new Point(0, 164);
             grpFolders.Margin = new Padding(0, 0, 0, 8);
             grpFolders.Name = "grpFolders";
             grpFolders.Padding = new Padding(10, 11, 10, 11);
@@ -363,7 +368,7 @@
             grpBackground.Controls.Add(lblIcoOutputSize);
             grpBackground.Controls.Add(cmbSolidColor);
             grpBackground.Dock = DockStyle.Top;
-            grpBackground.Location = new Point(0, 0);
+            grpBackground.Location = new Point(0, 72);
             grpBackground.Margin = new Padding(0, 0, 0, 8);
             grpBackground.Name = "grpBackground";
             grpBackground.Padding = new Padding(10, 11, 10, 11);
@@ -411,6 +416,44 @@
             cmbSolidColor.Size = new Size(167, 33);
             cmbSolidColor.TabIndex = 1;
             // 
+            // grpExplorer
+            // 
+            grpExplorer.Controls.Add(btnRefreshExplorerConverterMenu);
+            grpExplorer.Controls.Add(chkEnableExplorerConvertMenu);
+            grpExplorer.Dock = DockStyle.Top;
+            grpExplorer.Location = new Point(0, 0);
+            grpExplorer.Margin = new Padding(0, 0, 0, 8);
+            grpExplorer.Name = "grpExplorer";
+            grpExplorer.Padding = new Padding(10, 11, 10, 11);
+            grpExplorer.Size = new Size(882, 72);
+            grpExplorer.TabIndex = 3;
+            grpExplorer.TabStop = false;
+            grpExplorer.Text = "Windows Explorer";
+            // 
+            // chkEnableExplorerConvertMenu
+            // 
+            chkEnableExplorerConvertMenu.AutoSize = true;
+            chkEnableExplorerConvertMenu.Checked = true;
+            chkEnableExplorerConvertMenu.CheckState = CheckState.Checked;
+            chkEnableExplorerConvertMenu.Font = new Font("Segoe UI", 9F, FontStyle.Bold, GraphicsUnit.Point, 0);
+            chkEnableExplorerConvertMenu.Location = new Point(20, 32);
+            chkEnableExplorerConvertMenu.Name = "chkEnableExplorerConvertMenu";
+            chkEnableExplorerConvertMenu.Size = new Size(530, 29);
+            chkEnableExplorerConvertMenu.TabIndex = 0;
+            chkEnableExplorerConvertMenu.Text = "Add \"Converter To\" to Windows Explorer right-click menu";
+            chkEnableExplorerConvertMenu.UseVisualStyleBackColor = true;
+            // 
+            // btnRefreshExplorerConverterMenu
+            // 
+            btnRefreshExplorerConverterMenu.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            btnRefreshExplorerConverterMenu.AutoSize = true;
+            btnRefreshExplorerConverterMenu.Location = new Point(668, 28);
+            btnRefreshExplorerConverterMenu.Name = "btnRefreshExplorerConverterMenu";
+            btnRefreshExplorerConverterMenu.Size = new Size(192, 35);
+            btnRefreshExplorerConverterMenu.TabIndex = 1;
+            btnRefreshExplorerConverterMenu.Text = "Refresh E&xplorer menu";
+            btnRefreshExplorerConverterMenu.UseVisualStyleBackColor = true;
+            // 
             // grpPreview
             // 
             grpPreview.Controls.Add(listViewPreview);
@@ -420,7 +463,7 @@
             grpPreview.Location = new Point(0, 0);
             grpPreview.Name = "grpPreview";
             grpPreview.Padding = new Padding(10, 11, 10, 11);
-            grpPreview.Size = new Size(882, 500);
+            grpPreview.Size = new Size(882, 503);
             grpPreview.TabIndex = 0;
             grpPreview.TabStop = false;
             grpPreview.Text = "Review / preview";
@@ -434,7 +477,7 @@
             listViewPreview.Location = new Point(10, 84);
             listViewPreview.Name = "listViewPreview";
             listViewPreview.OwnerDraw = true;
-            listViewPreview.Size = new Size(862, 405);
+            listViewPreview.Size = new Size(862, 408);
             listViewPreview.TabIndex = 0;
             listViewPreview.TileSize = new Size(120, 140);
             listViewPreview.UseCompatibleStateImageBehavior = false;
@@ -474,30 +517,30 @@
             // toolStripMenuItemPreviewResize05x
             // 
             toolStripMenuItemPreviewResize05x.Name = "toolStripMenuItemPreviewResize05x";
-            toolStripMenuItemPreviewResize05x.Size = new Size(136, 34);
+            toolStripMenuItemPreviewResize05x.Size = new Size(160, 34);
             toolStripMenuItemPreviewResize05x.Text = "0.&5×";
             // 
             // toolStripMenuItemPreviewResize075x
             // 
             toolStripMenuItemPreviewResize075x.Name = "toolStripMenuItemPreviewResize075x";
-            toolStripMenuItemPreviewResize075x.Size = new Size(136, 34);
+            toolStripMenuItemPreviewResize075x.Size = new Size(160, 34);
             toolStripMenuItemPreviewResize075x.Text = "0.&75×";
             // 
             // toolStripSeparatorPreviewResizeScale
             // 
             toolStripSeparatorPreviewResizeScale.Name = "toolStripSeparatorPreviewResizeScale";
-            toolStripSeparatorPreviewResizeScale.Size = new Size(132, 6);
+            toolStripSeparatorPreviewResizeScale.Size = new Size(157, 6);
             // 
             // toolStripMenuItemPreviewResize2x
             // 
             toolStripMenuItemPreviewResize2x.Name = "toolStripMenuItemPreviewResize2x";
-            toolStripMenuItemPreviewResize2x.Size = new Size(136, 34);
+            toolStripMenuItemPreviewResize2x.Size = new Size(160, 34);
             toolStripMenuItemPreviewResize2x.Text = "&2×";
             // 
             // toolStripMenuItemPreviewResize4x
             // 
             toolStripMenuItemPreviewResize4x.Name = "toolStripMenuItemPreviewResize4x";
-            toolStripMenuItemPreviewResize4x.Size = new Size(136, 34);
+            toolStripMenuItemPreviewResize4x.Size = new Size(160, 34);
             toolStripMenuItemPreviewResize4x.Text = "&4×";
             // 
             // toolStripSeparatorPreviewAfterConvert
@@ -595,7 +638,7 @@
             lblPreviewPlaceholder.ForeColor = SystemColors.GrayText;
             lblPreviewPlaceholder.Location = new Point(10, 84);
             lblPreviewPlaceholder.Name = "lblPreviewPlaceholder";
-            lblPreviewPlaceholder.Size = new Size(862, 405);
+            lblPreviewPlaceholder.Size = new Size(862, 408);
             lblPreviewPlaceholder.TabIndex = 1;
             lblPreviewPlaceholder.Text = "Choose an image folder or drop files / a folder here. Thumbnails appear when images are loaded.";
             lblPreviewPlaceholder.TextAlign = ContentAlignment.MiddleCenter;
@@ -660,7 +703,7 @@
             // 
             AutoScaleDimensions = new SizeF(10F, 25F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(902, 823);
+            ClientSize = new Size(902, 899);
             Controls.Add(splitReview);
             Controls.Add(flowActions);
             Controls.Add(statusStripMain);
@@ -688,6 +731,8 @@
             grpFolders.PerformLayout();
             grpBackground.ResumeLayout(false);
             grpBackground.PerformLayout();
+            grpExplorer.ResumeLayout(false);
+            grpExplorer.PerformLayout();
             grpPreview.ResumeLayout(false);
             grpPreview.PerformLayout();
             contextMenuPreview.ResumeLayout(false);
@@ -729,6 +774,9 @@
         private Button btnBrowseSource;
         private Label lblIcoOutputSize;
         private ComboBox cmbIcoOutputSize;
+        private GroupBox grpExplorer;
+        private CheckBox chkEnableExplorerConvertMenu;
+        private Button btnRefreshExplorerConverterMenu;
         private GroupBox grpBackground;
         private Label lblCanvasFill;
         private ComboBox cmbSolidColor;

@@ -77,6 +77,24 @@ internal static class SupportedFormats
         return Path.Combine(directory, baseName + ext);
     }
 
+    internal static bool TryGetFormatIndexFromShellName(string shellName, out int formatIndex)
+    {
+        formatIndex = shellName.Trim().ToLowerInvariant() switch
+        {
+            "jpg" or "jpeg" => 0,
+            "png" => 1,
+            "bmp" => 2,
+            "gif" => 3,
+            "webp" => 4,
+            "ico" => 5,
+            "svg" => 6,
+            "pdf" => 7,
+            _ => -1
+        };
+
+        return formatIndex >= 0;
+    }
+
     internal static bool FormatIndexMatchesExtension(string filePath, int formatIndex)
     {
         var ext = Path.GetExtension(filePath).Trim();

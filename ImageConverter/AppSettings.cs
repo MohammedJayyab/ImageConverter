@@ -23,4 +23,6 @@ internal sealed class AppSettings
     public int IcoOutputSizeIndex { get; set; } = 5;
 
     public int SolidColorIndex { get; set; }
+
+    public bool EnableExplorerConvertMenu { get; set; } = true;
 }
