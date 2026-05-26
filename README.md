@@ -58,14 +58,23 @@ So the result is a **`.svg` wrapper around a raster image** — same pixels as a
 
 ## Convert to (Windows Explorer)
 
-Convert from **File Explorer** without opening the main app (same folder, new extension).
+Convert or scale images from **File Explorer** without opening the main window. Output stays in the **same folder** as the source file.
 
-Right-click an image → **Convert to** ▶ → choose **PNG (.png)**, **JPEG (.jpg)**, etc.
+![Explorer right-click menu — Convert to submenu with format choices, separator, Scale 0.5x and Scale 2x](images/ContextMenu.png)
 
-Uses the Windows **SubCommands** cascade (parent menu + format submenu). If the submenu does not appear, use **Refresh Explorer menu**; registering format verbs under `HKLM` may require running the app **once as Administrator**.
+*(Source capture: [`images/ContextMenu.bmp`](images/ContextMenu.bmp); [`images/ContextMenu.png`](images/ContextMenu.png) is included for GitHub and other Markdown viewers that do not render `.bmp` inline.)*
 
-- Toggle: **Windows Explorer** → **Add “Converter To” to Windows Explorer right-click menu** (on by default).
-- ICO size and background use `config.ini` (same as the main app).
+1. Right-click a supported image (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF).
+2. Choose **Convert to** ▶ and pick a format — same name, new extension, in place.
+3. Below the separator, **Scale 0.5x** or **Scale 2x** writes `name_scaled.ext` in the same folder (uses the file’s current extension).
+
+**In the app:** **Windows Explorer** group → enable **Add “Converter To” to Windows Explorer right-click menu** (on by default). Use **Refresh Explorer menu** after moving the install folder, upgrading, or if formats appear but scale items do not (may prompt for administrator once to register **HKLM** scale verbs).
+
+**Installer:** `Setup\Output\ImageConverter-Setup-1.0.exe` registers the menu at install time (elevated). See [`Setup/README-inno.md`](Setup/README-inno.md).
+
+**Windows 11:** The compact context menu may hide nested items; use **Show more options** or the classic menu for the full **Convert to** cascade.
+
+Explorer actions use **`config.ini`** for ICO size and background (same as the main app). Format rules (SVG wrapper, PDF raster, transparency) match the in-app **Convert to** submenu.
 
 ## Context menu (in-app review list)
 
@@ -84,7 +93,7 @@ If you find this project helpful, consider buying me a coffee to support its dev
 ## Notes
 
 - The image folder must not be a drive root (e.g. `C:\`).
-- Settings persist in **`%AppData%\Image Converter\config.ini`** (folder path, window layout, thumbnail size, ICO options, Explorer **Converter To** menu).
+- Settings persist in **`%AppData%\Image Converter\config.ini`** (folder path, window layout, thumbnail size, ICO options, Explorer **Convert to** menu toggle).
 - **`HelpHowToUse.rtf`** is copied to the output folder on build; edit it in the project to change the Help guide.
 - Depends on [Magick.NET-Q16-AnyCPU](https://www.nuget.org/packages/Magick.NET-Q16-AnyCPU).
 

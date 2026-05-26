@@ -23,7 +23,7 @@ Use **Converter To** in all user-visible text (menu, checkbox, About, help). Use
 |-------|--------|--------|
 | **1 — Headless convert** | Done | `ShellConvertCommandLine`, `ShellConvertRunner`, `Program.Main` branch, `SupportedFormats.TryGetFormatIndexFromShellName` |
 | **2 — Explorer menu + checkbox** | Done | `ExplorerShellRegistry`, `EnableExplorerConvertMenu`, `grpExplorer` + checkbox, sync on load/toggle |
-| **3 — Polish** | Partial | README updated; Inno uninstall snippet in `Setup/converter-to-registry-uninstall.iss`; help RTF not updated |
+| **3 — Polish** | Partial | README updated; Inno install runs `--shell-register-menu`; uninstall cleanup in `setupScript.iss`; help RTF not updated |
 | **Manual QA** | Pending | Explorer menu, multi-select, checkbox, CLI smoke test |
 | **Registry fix** | Done | Win11 compact menu: **no registry submenus** — use **Converter To…** + format picker; classic menu: **Converter To** cascade |
 | **Format picker** | Done | `--shell-convert-pick` + `ShellFormatPickerForm` for Windows 11 compact menu |
@@ -261,9 +261,10 @@ Menu on all files; worse UX. Not used if per-extension registration is implement
 
 ### Inno Setup (`Setup/setupScript.iss`)
 
-- **Do not** add static `[Registry]` blocks for each format (conflicts with checkbox).
-- **Do** on uninstall: delete `HKCU\Software\Classes\SystemFileAssociations\.<ext>\shell\ConverterTo` for all known extensions (cleanup even if user disabled feature before uninstall).
-- Optional post-install note in README: open app once to register menu (happens automatically if checkbox default is on).
+- **Install:** `[Run]` with `--shell-register-menu` (elevated setup) calls `ExplorerShellRegistry.Sync(true, exePath)` so `HKLM` CommandStore verbs are written without the user running the app as admin.
+- **Do not** duplicate static `[Registry]` blocks (app + checkbox own HKCU parent; uninstall must stay in sync).
+- **Uninstall:** `ConverterTo_UninstallRegistry` deletes HKCU association keys and HKLM/HKCU CommandStore verbs.
+- **App:** checkbox on/off and **Refresh Explorer menu** still call `Sync` (path updates, disable removes keys).
 
 ### Icons
 
@@ -277,10 +278,11 @@ Menu on all files; worse UX. Not used if per-extension registration is implement
 
 | File | Responsibility |
 |------|----------------|
-| `ImageConverter/ShellConvertCommandLine.cs` | Parse/validate `args`; expose format index + file paths. |
-| `ImageConverter/ShellConvertRunner.cs` | Load settings, run `BatchConversionRunner`, aggregate errors, exit code. |
-| `ImageConverter/ShellConvertFormatMap.cs` (optional) | Map `png` → format index 1; keeps `SupportedFormats` unchanged. |
-| `ImageConverter/ExplorerShellRegistry.cs` | Create/delete `ConverterTo` menu keys; `Sync(bool enabled, string exePath)`. |
+| `ImageConverter/Shell/ShellConvertCommandLine.cs` | Parse/validate `args`; expose format index + file paths. |
+| `ImageConverter/Shell/ShellConvertRunner.cs` | Load settings, run `BatchConversionRunner`, aggregate errors, exit code. |
+| `ImageConverter/Shell/ExplorerShellRegistry.cs` | Create/delete Convert to menu keys; `Sync(bool enabled, string exePath)`. |
+| `ImageConverter/Shell/ShellHost.cs` | CLI entry for `--shell-register-menu`, `--shell-convert`, `--shell-scale`. |
+| `ImageConverter/Shell/ExplorerShellMenuUi.cs` | Main-window sync/refresh and HKLM elevation prompts. |
 
 ### Modify
 
@@ -292,7 +294,8 @@ Menu on all files; worse UX. Not used if per-extension registration is implement
 | `ImageConverter/AppSettingsStore.cs` | Read/write `EnableExplorerConvertMenu`; default true when key missing. |
 | `ImageConverter/frmMain.Designer.cs` | `chkEnableExplorerConvertMenu` (checked by default). |
 | `ImageConverter/frmMain.cs` | Load/save checkbox; `CheckedChanged` → `ExplorerShellRegistry.Sync`; startup sync after settings load. |
-| `Setup/setupScript.iss` | Uninstall cleanup of `ConverterTo` keys only (no install-time menu registration). |
+| `Setup/setupScript.iss` | Post-install `--shell-register-menu`; uninstall cleanup of Explorer keys. |
+| `ImageConverter/Program.cs` | `--shell-register-menu` for installer (no GUI). |
 | `README.md` | Explorer **Converter To** menu + checkbox setting. |
 | `ImageConverter/HelpHowToUse.rtf` | Optional: Converter To + how to disable in app. |
 

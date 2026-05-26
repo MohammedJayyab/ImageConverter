@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
+using ImageConverter.Shell;
 
 namespace ImageConverter
 {
@@ -18,6 +19,7 @@ namespace ImageConverter
 
         private readonly AppSettingsStore _settingsStore = new();
         private AppSettings _settings = new();
+        private bool _attemptedHklmScaleElevation;
 
         private CancellationTokenSource? _previewLoadCts;
         private CancellationTokenSource? _conversionCts;
@@ -232,33 +234,20 @@ namespace ImageConverter
             }
         }
 
-        private void SyncExplorerConvertMenuFromSettings()
-        {
-            try
-            {
-                ExplorerShellRegistry.Sync(_settings.EnableExplorerConvertMenu, Application.ExecutablePath);
-            }
-            catch (Exception ex)
-            {
-                SetStatusMessage("Converter To menu: " + ex.Message);
-            }
-        }
+        private void SyncExplorerConvertMenuFromSettings() =>
+            ExplorerShellMenuUi.SyncFromSettings(
+                _settings.EnableExplorerConvertMenu,
+                Application.ExecutablePath,
+                SetStatusMessage,
+                ref _attemptedHklmScaleElevation);
 
-        private void RefreshExplorerConverterMenu()
-        {
-            SyncExplorerConvertMenuFromSettings();
-            SetStatusMessage("Explorer Converter To menu refreshed.");
-
-            MessageBox.Show(
+        private void RefreshExplorerConverterMenu() =>
+            ExplorerShellMenuUi.Refresh(
                 this,
-                "Explorer menu updated.\r\n\r\n" +
-                "Right-click an image → Convert to ▶ → pick BMP, PNG, JPEG, …\r\n\r\n" +
-                "Close all File Explorer windows, then open a new one.\r\n" +
-                "If there is no ▶ arrow, run the app once as Administrator so submenu verbs can register.",
-                "Convert to",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
-        }
+                _settings.EnableExplorerConvertMenu,
+                Application.ExecutablePath,
+                SetStatusMessage,
+                ref _attemptedHklmScaleElevation);
 
         private void PersistSettings()
         {

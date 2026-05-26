@@ -1,4 +1,6 @@
-namespace ImageConverter;
+using ImageConverter;
+
+namespace ImageConverter.Shell;
 
 internal sealed class ShellConvertCommandLine
 {
@@ -16,23 +18,7 @@ internal sealed class ShellConvertCommandLine
             return false;
         }
 
-        var flagIndex = -1;
-        for (var i = 0; i < args.Length; i++)
-        {
-            if (args[i].Equals(Flag, StringComparison.OrdinalIgnoreCase))
-            {
-                flagIndex = i;
-                break;
-            }
-        }
-
-        if (flagIndex < 0 || flagIndex + 1 >= args.Length)
-        {
-            return false;
-        }
-
-        var formatToken = args[flagIndex + 1];
-        if (formatToken.Equals("--", StringComparison.Ordinal) || formatToken.StartsWith('-'))
+        if (!ShellArguments.TryGetTokenAfterFlag(args, Flag, out var flagIndex, out var formatToken))
         {
             return false;
         }
@@ -42,12 +28,7 @@ internal sealed class ShellConvertCommandLine
             return false;
         }
 
-        var paths = ShellConvertPaths.CollectExistingImagePathsFromArgs(args);
-        if (paths.Count == 0)
-        {
-            paths = ShellConvertPaths.CollectFromArgs(args, flagIndex + 2);
-        }
-
+        var paths = ShellArguments.ResolvePaths(args, flagIndex);
         if (paths.Count == 0)
         {
             return false;

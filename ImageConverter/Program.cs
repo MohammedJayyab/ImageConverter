@@ -1,29 +1,17 @@
+using ImageConverter.Shell;
+
 namespace ImageConverter;
 
 internal static class Program
 {
-    private const string ShellConvertFlag = "--shell-convert";
-
     [STAThread]
     static void Main(string[] args)
     {
         args ??= [];
 
-        if (ContainsFlag(args, ShellConvertFlag))
+        if (ShellHost.TryHandleCommandLine(args, out var exitCode))
         {
-            if (ShellConvertCommandLine.TryParse(args, out var shellCommand) && shellCommand is not null)
-            {
-                Environment.Exit(ShellConvertRunner.Run(shellCommand));
-                return;
-            }
-
-            MessageBox.Show(
-                "Converter To could not read the selected file from Explorer.\r\n\r\n" +
-                "Use Refresh Explorer menu in Image Converter, then close all Explorer windows and open a new one.",
-                "Image Converter — Converter To",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Warning);
-            Environment.Exit(1);
+            Environment.Exit(exitCode);
             return;
         }
 
@@ -42,9 +30,6 @@ internal static class Program
 
         Application.Run(new StartupApplicationContext());
     }
-
-    private static bool ContainsFlag(string[] args, string flag) =>
-        args.Any(a => a.Equals(flag, StringComparison.OrdinalIgnoreCase));
 
     private static Mutex? TryAcquireSingleInstanceMutex()
     {

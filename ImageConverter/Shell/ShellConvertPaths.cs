@@ -1,4 +1,6 @@
-namespace ImageConverter;
+using ImageConverter;
+
+namespace ImageConverter.Shell;
 
 internal static class ShellConvertPaths
 {
@@ -24,14 +26,6 @@ internal static class ShellConvertPaths
         return paths;
     }
 
-    internal static List<string> NormalizeExistingImageFiles(IEnumerable<string> paths) =>
-        paths
-            .Where(p => File.Exists(p))
-            .Where(SupportedFormats.IsPreviewFile)
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-    /// <summary>Explorer may pass the file path before or after flags; %1 / %* expansion varies by Windows version.</summary>
     internal static List<string> CollectExistingImagePathsFromArgs(string[] args)
     {
         var paths = new List<string>();

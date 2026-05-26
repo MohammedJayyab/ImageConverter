@@ -1,4 +1,6 @@
-namespace ImageConverter;
+using ImageConverter;
+
+namespace ImageConverter.Shell;
 
 internal static class ShellConversionDefaults
 {
