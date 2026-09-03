@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using ImageConverter.Shell;
 
 namespace ImageConverter;
 
@@ -6,8 +7,11 @@ internal sealed class StartupApplicationContext : ApplicationContext
 {
     private static readonly TimeSpan MinimumSplashVisible = TimeSpan.FromSeconds(1.5);
 
-    public StartupApplicationContext()
+    private readonly ShellOpenRequest? _openRequest;
+
+    public StartupApplicationContext(ShellOpenRequest? openRequest = null)
     {
+        _openRequest = openRequest;
         var splash = new SplashForm();
         MainForm = splash;
         splash.Shown += OnSplashShown;
@@ -27,7 +31,7 @@ internal sealed class StartupApplicationContext : ApplicationContext
             await Task.Delay(remaining).ConfigureAwait(true);
         }
 
-        var main = new frmMain();
+        var main = new frmMain(_openRequest?.FolderPath, _openRequest?.SelectedImagePaths);
         MainForm = main;
         splash.Close();
         main.Show();

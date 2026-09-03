@@ -31,7 +31,7 @@ internal static class SupportedFormats
 
     private static readonly HashSet<string> ResizableExtensions = new(StringComparer.OrdinalIgnoreCase)
     {
-        ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp", ".ico"
+        ".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp", ".ico", ".svg"
     };
 
     internal static string GetFormatLabel(int formatIndex)

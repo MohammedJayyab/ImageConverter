@@ -6,8 +6,11 @@ internal static class ShellHost
 {
     internal const string RegisterMenuFlag = "--shell-register-menu";
 
+    internal const string OpenFlag = "--shell-open";
+
     private const string ConvertFlag = "--shell-convert";
     private const string ScaleFlag = "--shell-scale";
+    private const string CustomSizeFlag = "--shell-custom-size";
 
     internal static bool TryHandleCommandLine(string[] args, out int exitCode)
     {
@@ -16,6 +19,12 @@ internal static class ShellHost
         if (ShellArguments.ContainsFlag(args, RegisterMenuFlag))
         {
             exitCode = RunRegisterMenu();
+            return true;
+        }
+
+        if (ShellArguments.ContainsFlag(args, CustomSizeFlag))
+        {
+            exitCode = ShellCustomSizeRunner.Run(args);
             return true;
         }
 
@@ -70,8 +79,8 @@ internal static class ShellHost
         try
         {
             var result = ExplorerShellRegistry.Sync(enabled: true, exePath);
-            var scaleOk = ExplorerShellRegistry.VerifyScaleVerbsPresent(requireHklm: true);
-            return result.HklmCommandStoreWritten && scaleOk ? 0 : 1;
+            var resizeActionsOk = ExplorerShellRegistry.VerifyResizeVerbsPresent(requireHklm: true);
+            return result.HklmCommandStoreWritten && resizeActionsOk ? 0 : 1;
         }
         catch
         {

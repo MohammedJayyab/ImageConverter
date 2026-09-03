@@ -18,8 +18,10 @@ namespace ImageConverter
         private static readonly Color PreviewItemSelectedBorder = Color.FromArgb(0, 120, 215);
 
         private readonly AppSettingsStore _settingsStore = new();
+        private readonly string? _startupFolder;
+        private readonly IReadOnlyCollection<string> _startupSelectedImagePaths;
         private AppSettings _settings = new();
-        private bool _attemptedHklmScaleElevation;
+        private bool _attemptedHklmResizeElevation;
 
         private CancellationTokenSource? _previewLoadCts;
         private CancellationTokenSource? _conversionCts;
@@ -29,7 +31,16 @@ namespace ImageConverter
         private int _selectionInfoVersion;
 
         public frmMain()
+            : this(null, null)
         {
+        }
+
+        internal frmMain(
+            string? startupFolder,
+            IReadOnlyCollection<string>? startupSelectedImagePaths)
+        {
+            _startupFolder = startupFolder;
+            _startupSelectedImagePaths = startupSelectedImagePaths ?? [];
             InitializeComponent();
         }
 
@@ -41,6 +52,11 @@ namespace ImageConverter
             EnableControlDoubleBuffering(listViewPreview);
             PopulatePreviewSizeCombo();
             ApplySettingsToUi();
+            if (!string.IsNullOrWhiteSpace(_startupFolder))
+            {
+                txtSourceFolder.Text = _startupFolder;
+            }
+
             SyncExplorerConvertMenuFromSettings();
             UpdatePlaceholderVisibility();
             SetStatusMessage("Ready");
@@ -116,6 +132,17 @@ namespace ImageConverter
             WireResizeMenuItem(toolStripMenuItemPreviewResize075x, 0.75);
             WireResizeMenuItem(toolStripMenuItemPreviewResize2x, 2);
             WireResizeMenuItem(toolStripMenuItemPreviewResize4x, 4);
+            toolStripMenuItemPreviewResizeCustom.Click += async (_, _) =>
+            {
+                try
+                {
+                    await ResizeSelectionToCustomSizeAsync();
+                }
+                catch (Exception ex)
+                {
+                    SetStatusMessage("Resize error: " + ex.Message);
+                }
+            };
             cmbPreviewSize.SelectedIndexChanged += async (_, _) =>
             {
                 if (_loadingUiSettings)
@@ -239,7 +266,7 @@ namespace ImageConverter
                 _settings.EnableExplorerConvertMenu,
                 Application.ExecutablePath,
                 SetStatusMessage,
-                ref _attemptedHklmScaleElevation);
+                ref _attemptedHklmResizeElevation);
 
         private void RefreshExplorerConverterMenu() =>
             ExplorerShellMenuUi.Refresh(
@@ -247,7 +274,7 @@ namespace ImageConverter
                 _settings.EnableExplorerConvertMenu,
                 Application.ExecutablePath,
                 SetStatusMessage,
-                ref _attemptedHklmScaleElevation);
+                ref _attemptedHklmResizeElevation);
 
         private void PersistSettings()
         {
@@ -447,6 +474,19 @@ namespace ImageConverter
         {
             if (_conversionBusy)
             {
+                return;
+            }
+
+            if (e.Control && e.KeyCode == Keys.A)
+            {
+                e.Handled = true;
+                e.SuppressKeyPress = true;
+
+                foreach (ListViewItem item in listViewPreview.Items)
+                {
+                    item.Selected = true;
+                }
+
                 return;
             }
 
@@ -650,7 +690,7 @@ namespace ImageConverter
                 return;
             }
 
-            await ReloadSourcePreviewsAsync();
+            await ReloadSourcePreviewsAsync(_startupSelectedImagePaths);
         }
 
         private async Task BrowseForFolderAsync()
@@ -1218,7 +1258,7 @@ namespace ImageConverter
             {
                 MessageBox.Show(
                     this,
-                    "Resize supports JPEG, PNG, BMP, GIF, WEBP, and ICO only.",
+                    "Resize supports JPEG, PNG, BMP, GIF, WEBP, ICO, and SVG only.",
                     "Resize",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);
@@ -1244,6 +1284,64 @@ namespace ImageConverter
             }
 
             await RunBatchResizeAndRefreshAsync(pathsToResize, scaleFactor).ConfigureAwait(true);
+        }
+
+        private async Task ResizeSelectionToCustomSizeAsync()
+        {
+            if (!EnsureImageFolderExists())
+            {
+                return;
+            }
+
+            var paths = GetSelectedSourcePaths();
+            var pathsToResize = paths.Where(ImageResize.IsResizablePath).ToList();
+            if (pathsToResize.Count == 0)
+            {
+                MessageBox.Show(
+                    this,
+                    "Resize supports JPEG, PNG, BMP, GIF, WEBP, ICO, and SVG only.",
+                    "Resize",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+                return;
+            }
+
+            if (pathsToResize.Count < paths.Count)
+            {
+                var skipped = paths.Count - pathsToResize.Count;
+                MessageBox.Show(
+                    this,
+                    $"{skipped} selected file(s) were skipped (not a resizable image type).",
+                    "Resize",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+
+            var initialOutputFolder = Path.GetDirectoryName(pathsToResize[0]) ?? string.Empty;
+            using var dialog = new CustomSizeForm(initialOutputFolder);
+            if (dialog.ShowDialog(this) != DialogResult.OK)
+            {
+                return;
+            }
+
+            var outputPaths = pathsToResize
+                .Select(path => ImageResize.BuildScaledOutputPath(path, dialog.OutputFolder))
+                .ToList();
+            if (!ConfirmOverwriteExistingFiles(outputPaths))
+            {
+                SetStatusMessage("Resize cancelled — existing file(s) were not overwritten.");
+                return;
+            }
+
+            var reloadPreviews = TryNormalizeDirectoryPath(txtSourceFolder.Text.Trim(), out var previewFolder)
+                && string.Equals(previewFolder, dialog.OutputFolder, StringComparison.OrdinalIgnoreCase);
+            await RunBatchCustomResizeAndRefreshAsync(
+                    pathsToResize,
+                    dialog.OutputWidth,
+                    dialog.OutputHeight,
+                    dialog.OutputFolder,
+                    reloadPreviews)
+                .ConfigureAwait(true);
         }
 
         private bool ConfirmOverwriteExistingFiles(IReadOnlyList<string> destinationPaths)
@@ -1550,7 +1648,66 @@ namespace ImageConverter
             await ApplyResizeResultAndReloadAsync(batchResult).ConfigureAwait(true);
         }
 
-        private async Task ApplyResizeResultAndReloadAsync(BatchImageResizeRunner.RunResult batchResult)
+        private async Task RunBatchCustomResizeAndRefreshAsync(
+            IReadOnlyList<string> pathsToResize,
+            int width,
+            int height,
+            string outputFolder,
+            bool reloadPreviews)
+        {
+            await ReplaceConversionCancellationAsync().ConfigureAwait(true);
+            var ct = _conversionCts!.Token;
+            IProgress<(int Current, int Total, string FileName)> uiProgress = new Progress<(int Current, int Total, string FileName)>(p =>
+            {
+                toolStripProgressBatch.Value = p.Current;
+                SetStatusMessage($"Resizing {p.Current} of {p.Total}: {p.FileName}");
+            });
+
+            SetConversionBusy(true);
+            toolStripProgressBatch.Visible = true;
+            toolStripProgressBatch.Minimum = 0;
+            toolStripProgressBatch.Maximum = Math.Max(1, pathsToResize.Count);
+            toolStripProgressBatch.Value = 0;
+            UseWaitCursor = true;
+
+            BatchImageResizeRunner.RunResult? batchResult = null;
+            try
+            {
+                batchResult = await Task.Run(
+                        () => BatchImageResizeRunner.RunToSize(
+                            pathsToResize,
+                            width,
+                            height,
+                            outputFolder,
+                            ct,
+                            uiProgress),
+                        ct)
+                    .ConfigureAwait(true);
+            }
+            catch (OperationCanceledException)
+            {
+                SetStatusMessage("Resize cancelled.");
+                return;
+            }
+            finally
+            {
+                UseWaitCursor = false;
+                toolStripProgressBatch.Visible = false;
+                SetConversionBusy(false);
+            }
+
+            if (batchResult is null)
+            {
+                SetStatusMessage("Resize did not complete.");
+                return;
+            }
+
+            await ApplyResizeResultAndReloadAsync(batchResult, reloadPreviews).ConfigureAwait(true);
+        }
+
+        private async Task ApplyResizeResultAndReloadAsync(
+            BatchImageResizeRunner.RunResult batchResult,
+            bool reloadPreviews = true)
         {
             var createdOutputs = GetSuccessfulOutputsExistingOnDisk(batchResult.SuccessfulOutputPaths);
             await WaitForOutputsOnDiskAsync(createdOutputs).ConfigureAwait(true);
@@ -1570,9 +1727,16 @@ namespace ImageConverter
             var summary = batchResult.FailCount == 0
                 ? $"Resize finished — {batchResult.SuccessCount} file(s) saved as _scaled."
                 : $"Resize finished — {batchResult.SuccessCount} succeeded, {batchResult.FailCount} failed.";
-            await ReloadSourcePreviewsAsync(
-                createdOutputs.Count > 0 ? createdOutputs : null,
-                summary).ConfigureAwait(true);
+            if (reloadPreviews)
+            {
+                await ReloadSourcePreviewsAsync(
+                    createdOutputs.Count > 0 ? createdOutputs : null,
+                    summary).ConfigureAwait(true);
+            }
+            else
+            {
+                SetStatusMessage(summary);
+            }
         }
 
         private async Task PasteClipboardImageAsync()
@@ -2219,6 +2383,7 @@ namespace ImageConverter
             toolStripMenuItemPreviewResize075x.Enabled = resizeOk;
             toolStripMenuItemPreviewResize2x.Enabled = resizeOk;
             toolStripMenuItemPreviewResize4x.Enabled = resizeOk;
+            toolStripMenuItemPreviewResizeCustom.Enabled = resizeOk;
 
             toolStripMenuItemPreviewConvertTo.DropDownItems.Clear();
             foreach (var formatIdx in BuildAllowedConvertToFormatIndices(paths))

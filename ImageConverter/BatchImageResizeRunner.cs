@@ -37,4 +37,40 @@ internal static class BatchImageResizeRunner
 
         return new RunResult(success, fail, createdOutputs);
     }
+
+    internal static RunResult RunToSize(
+        IReadOnlyList<string> sourcePaths,
+        int width,
+        int height,
+        string outputFolder,
+        CancellationToken cancellationToken,
+        IProgress<(int Current, int Total, string FileName)>? progress = null)
+    {
+        var success = 0;
+        var fail = 0;
+        var total = sourcePaths.Count;
+        var createdOutputs = new List<string>();
+
+        for (var i = 0; i < sourcePaths.Count; i++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var src = sourcePaths[i];
+            var name = Path.GetFileName(src);
+            progress?.Report((i + 1, total, name));
+
+            var outputPath = ImageResize.BuildScaledOutputPath(src, outputFolder);
+            var code = ImageResize.ResizeTo(src, outputPath, width, height, cancellationToken, out _);
+            if (code == 0)
+            {
+                success++;
+                createdOutputs.Add(outputPath);
+            }
+            else
+            {
+                fail++;
+            }
+        }
+
+        return new RunResult(success, fail, createdOutputs);
+    }
 }

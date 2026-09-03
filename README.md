@@ -28,7 +28,7 @@ Converted files are written **into the same folder** (same name, new extension) 
 
 - **ICO** — square size 16–256 px; white, black, or transparent letterbox; largest frame when reading multi-size icons.
 - **Transparent background** — choose **Transparent (preserve alpha)** for PNG, GIF, WEBP, ICO, and SVG. Keeps existing transparency; on opaque images with a **uniform border color** (e.g. white or green screen edges), that color is keyed out. This is **not** AI background removal for busy photo backgrounds.
-- **SVG** — see [SVG output](#svg-output) below (embedded image, not vector tracing).
+- **SVG** — see [SVG output](#svg-output) below (embedded image, not vector tracing). Resizing an existing SVG preserves its vector content.
 - **PDF** — single-page raster image via ImageMagick.
 
 ### SVG output
@@ -58,7 +58,7 @@ So the result is a **`.svg` wrapper around a raster image** — same pixels as a
 
 ## Convert to (Windows Explorer)
 
-Convert or scale images from **File Explorer** without opening the main window. Output stays in the **same folder** as the source file.
+Convert or resize images from **File Explorer**. Output stays in the source folder unless you choose another folder for a custom size.
 
 ![Explorer right-click menu — Convert to submenu with format choices, separator, Scale 0.5x and Scale 2x](images/ContextMenu.png)
 
@@ -67,8 +67,10 @@ Convert or scale images from **File Explorer** without opening the main window. 
 1. Right-click a supported image (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF).
 2. Choose **Convert to** ▶ and pick a format — same name, new extension, in place.
 3. Below the separator, **Scale 0.5x** or **Scale 2x** writes `name_scaled.ext` in the same folder (uses the file’s current extension).
+4. **Set custom size…** opens the existing width, height, and output-folder dialog.
+5. **Open in Image Converter** opens an image’s folder in the app and selects that image. The same action is available when right-clicking a folder.
 
-**In the app:** **Windows Explorer** group → enable **Add “Converter To” to Windows Explorer right-click menu** (on by default). Use **Refresh Explorer menu** after moving the install folder, upgrading, or if formats appear but scale items do not (may prompt for administrator once to register **HKLM** scale verbs).
+**In the app:** **Windows Explorer** group → enable **Add Image Converter actions to Windows Explorer right-click menu** (on by default). Use **Refresh Explorer menu** after moving the install folder, upgrading, or if resize items do not appear (may prompt for administrator once to register **HKLM** command verbs).
 
 **Installer:** `Setup\Output\ImageConverter-Setup-1.0.exe` registers the menu at install time (elevated). See [`Setup/README-inno.md`](Setup/README-inno.md).
 
@@ -78,7 +80,7 @@ Explorer actions use **`config.ini`** for ICO size and background (same as the m
 
 ## Context menu (in-app review list)
 
-**Convert to Icon** · **Convert to** (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF) · **Resize** (0.5×, 0.75×, 2×, or 4×, saves as `name_scaled.ext`) · Copy · Copy image path · Rename · Delete · Open file location · Open by Paint · Open by Paint.NET
+**Convert to Icon** · **Convert to** (JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, PDF) · **Resize** (0.5×, 0.75×, 2×, 4×, or a custom size; saves as `name_scaled.ext`) · Copy · Copy image path · Rename · Delete · Open file location · Open by Paint · Open by Paint.NET
 
 Existing output files trigger an overwrite prompt. The **Convert to** submenu skips formats the selection already uses.
 

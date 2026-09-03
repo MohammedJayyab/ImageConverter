@@ -15,10 +15,23 @@ internal static class Program
             return;
         }
 
+        var isShellOpen = ShellArguments.ContainsFlag(args, ShellHost.OpenFlag);
+        ShellOpenRequest? openRequest = null;
+        if (isShellOpen && !ShellOpenRequest.TryParse(args, ShellHost.OpenFlag, out openRequest))
+        {
+            ApplicationConfiguration.Initialize();
+            MessageBox.Show(
+                "Image Converter could not open the selected image or folder.",
+                "Image Converter",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+            return;
+        }
+
         ApplicationConfiguration.Initialize();
 
         using var instanceMutex = TryAcquireSingleInstanceMutex();
-        if (instanceMutex is null)
+        if (openRequest is null && instanceMutex is null)
         {
             MessageBox.Show(
                 "Image Converter is already running.",
@@ -28,7 +41,7 @@ internal static class Program
             return;
         }
 
-        Application.Run(new StartupApplicationContext());
+        Application.Run(new StartupApplicationContext(openRequest));
     }
 
     private static Mutex? TryAcquireSingleInstanceMutex()

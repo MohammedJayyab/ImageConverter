@@ -8,7 +8,9 @@ internal static class ExplorerShellRegistry
 {
     internal const string ParentShellKeyName = "ImageConverter.ConvertTo";
 
+    private const string OpenShellKeyName = "ImageConverter.Open";
     private const string ParentMenuLabel = "Convert to";
+    private const string OpenMenuLabel = "Open in Image Converter";
 
     private const string AssociationsRoot = @"Software\Classes\SystemFileAssociations";
 
@@ -19,6 +21,7 @@ internal static class ExplorerShellRegistry
 
     private const string ScaleHalfVerbId = "ImageConverter.ConvertTo.Scale.Half";
     private const string Scale2xVerbId = "ImageConverter.ConvertTo.Scale.2x";
+    private const string CustomSizeVerbId = "ImageConverter.ConvertTo.Size.Custom";
 
     private static readonly string[] ObsoleteMenuTreeKeys =
     [
@@ -88,16 +91,19 @@ internal static class ExplorerShellRegistry
 
         foreach (var extension in FileExtensions)
         {
-            RegisterAssociationParent($@"{AssociationsRoot}\{extension}\shell", subCommands, iconPath);
+            var shellPath = $@"{AssociationsRoot}\{extension}\shell";
+            RegisterAssociationParent(shellPath, subCommands, iconPath);
+            RegisterOpenAction(shellPath, fullExe, iconPath);
         }
 
+        RegisterOpenAction(@"Software\Classes\Directory\shell", fullExe, iconPath);
         NotifyAssociationChanged();
 
         string? warning = null;
         if (!hklmOk)
         {
             warning =
-                "Format submenu verbs could not be written to HKLM (not elevated). " +
+                "Explorer submenu actions could not be written to HKLM (not elevated). " +
                 "Run Image Converter as Administrator once, then click Refresh Explorer menu.";
         }
 
@@ -113,6 +119,7 @@ internal static class ExplorerShellRegistry
         {
             var shellPath = $@"{AssociationsRoot}\{extension}\shell";
             DeleteKey(Registry.CurrentUser, $@"{shellPath}\{ParentShellKeyName}");
+            DeleteKey(Registry.CurrentUser, $@"{shellPath}\{OpenShellKeyName}");
 
             foreach (var legacy in LegacyShellKeyNames)
             {
@@ -126,13 +133,16 @@ internal static class ExplorerShellRegistry
 
             DeleteLegacyKeysUnderClassesRoot(extension);
         }
+
+        DeleteKey(Registry.CurrentUser, $@"Software\Classes\Directory\shell\{OpenShellKeyName}");
     }
 
     private static string BuildSubCommandsList()
     {
         var ids = OutputFormats
             .Select(f => FormatVerbId(f.VerbSuffix))
-            .Concat(ScaleVerbs.Select(s => s.VerbId));
+            .Concat(ScaleVerbs.Select(s => s.VerbId))
+            .Append(CustomSizeVerbId);
         return string.Join(";", ids);
     }
 
@@ -173,6 +183,17 @@ internal static class ExplorerShellRegistry
                 {
                     hklmOk = false;
                 }
+            }
+
+            if (!RegisterCommandStoreActionVerb(
+                    hive,
+                    CustomSizeVerbId,
+                    "Set custom size…",
+                    $"\"{exePath}\" --shell-custom-size \"%1\"",
+                    commandFlags: null,
+                    requireSuccess: requireHklm))
+            {
+                hklmOk = false;
             }
         }
 
@@ -223,6 +244,31 @@ internal static class ExplorerShellRegistry
         }
     }
 
+    private static void RegisterOpenAction(string shellParentPath, string exePath, string? iconPath)
+    {
+        using var action = Registry.CurrentUser.CreateSubKey(
+            $@"{shellParentPath}\{OpenShellKeyName}",
+            writable: true);
+        if (action is null)
+        {
+            return;
+        }
+
+        action.SetValue(null, OpenMenuLabel);
+        action.SetValue("MUIVerb", OpenMenuLabel);
+        if (!string.IsNullOrEmpty(iconPath))
+        {
+            action.SetValue("Icon", iconPath);
+        }
+        else
+        {
+            RemoveValueIfPresent(action, "Icon");
+        }
+
+        using var command = action.CreateSubKey("command", writable: true);
+        command?.SetValue(null, $"\"{exePath}\" --shell-open \"%1\"");
+    }
+
     private static void RegisterAssociationParent(string shellParentPath, string subCommands, string? iconPath)
     {
         using var parent = Registry.CurrentUser.CreateSubKey(
@@ -270,6 +316,9 @@ internal static class ExplorerShellRegistry
             TryDelete(Registry.LocalMachine, $@"{CommandStoreRoot}\{verbId}");
         }
 
+        TryDelete(Registry.CurrentUser, $@"{CommandStoreRoot}\{CustomSizeVerbId}");
+        TryDelete(Registry.LocalMachine, $@"{CommandStoreRoot}\{CustomSizeVerbId}");
+
         foreach (var obsolete in ObsoleteCommandStoreVerbIds)
         {
             TryDelete(Registry.CurrentUser, $@"{CommandStoreRoot}\{obsolete}");
@@ -290,6 +339,7 @@ internal static class ExplorerShellRegistry
     {
         const string classesRoot = @"Software\Classes";
         DeleteKey(Registry.CurrentUser, $@"{classesRoot}\{extension}\shell\{ParentShellKeyName}");
+        DeleteKey(Registry.CurrentUser, $@"{classesRoot}\{extension}\shell\{OpenShellKeyName}");
         foreach (var legacy in LegacyShellKeyNames)
         {
             DeleteKey(Registry.CurrentUser, $@"{classesRoot}\{extension}\shell\{legacy}");
@@ -374,9 +424,10 @@ internal static class ExplorerShellRegistry
         return File.Exists(exePath) ? $"{Path.GetFullPath(exePath)},0" : null;
     }
 
-    internal static bool VerifyScaleVerbsPresent(bool requireHklm = false)
+    internal static bool VerifyResizeVerbsPresent(bool requireHklm = false)
     {
-        foreach (var (verbId, _, _, _) in ScaleVerbs)
+        var verbIds = ScaleVerbs.Select(scale => scale.VerbId).Append(CustomSizeVerbId);
+        foreach (var verbId in verbIds)
         {
             if (requireHklm)
             {
@@ -401,8 +452,8 @@ internal static class ExplorerShellRegistry
     internal static bool HklmFormatVerbsPresent() =>
         CommandStoreVerbExists(Registry.LocalMachine, FormatVerbId(OutputFormats[0].VerbSuffix));
 
-    internal static bool NeedsHklmScaleRegistration() =>
-        HklmFormatVerbsPresent() && !VerifyScaleVerbsPresent(requireHklm: true);
+    internal static bool NeedsHklmResizeRegistration() =>
+        HklmFormatVerbsPresent() && !VerifyResizeVerbsPresent(requireHklm: true);
 
     internal static bool IsProcessElevated()
     {

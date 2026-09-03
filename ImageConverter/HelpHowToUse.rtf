@@ -1,44 +1,87 @@
-{\rtf1\ansi\ansicpg1252\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset0 Segoe UI;}}{\colortbl;\red0\green102\blue204;\red0\green130\blue70;\red196\green89\blue17;\red178\green34\blue34;}
-\viewkind4\uc1\pard\sa200\sl276\slmult1\b\f0\fs28 Image Converter \endash  quick guide\b0\fs22\par
-\pard\sa200\sl276\slmult1\b\cf3 What it is for\b0\cf0\par
-\pard\sa100\fi-360\li720\bullet\tab Batch-convert images in a folder among \cf2 JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, and PDF\cf0 .\par
-\bullet\tab \cf2 Preview thumbnails\cf0 , pick files, and convert without a separate export step.\par
-\bullet\tab Useful for preparing web assets, icons, PDF snapshots, and format cleanup on Windows.\par
-\pard\sa200\sl276\slmult1\b\cf3 Getting started\b0\cf0\par
-\pard\sa100\fi-360\li720 1.\tab Choose an image folder (\cf1 File \endash  Open folder\cf0 , or \cf1 Browse\cf0  on the main window).\par
-2.\tab \cf2 Thumbnails\cf0  load in the review list. Drag a folder or files onto the list to set the folder.\par
-3.\tab \cf1 Select\cf0  one or more images.\par
-\pard\sa200\sl276\slmult1\b\cf3 Converting\b0\cf0\par
-\pard\sa100\fi-360\li720\bullet\tab \cf1 Right-click\cf0  a selected thumbnail \endash  \cf1 Convert to\cf0  \endash  pick a format.\par
-\bullet\tab \cf1 Resize\cf0  \endash  \cf2 0.5x, 0.75x, 2x, or 4x\cf0  saves a new file beside the original: same name with \cf2 _scaled\cf0  before the extension (e.g. \cf2 photo_scaled.png\cf0 ). \cf2 JPEG, PNG, BMP, GIF, WEBP, and ICO\cf0  only.\par
-\bullet\tab \cf1 Convert to Icon\cf0  creates or rebuilds \cf2 .ico\cf0  files using the \cf2 ICO size\cf0  and \cf2 background\cf0  settings at the top (white, black, or transparent letterbox).\par
-\bullet\tab Set \cf2 Background\cf0  to \cf2 Transparent (preserve alpha)\cf0  for \cf2 PNG, GIF, WEBP, ICO, or SVG\cf0 . Keeps existing alpha; keys out a uniform edge color on flat backgrounds. \cf4 Not AI removal\cf0  for complex photos (\cf4 JPG and BMP do not support transparency\cf0 ).\par
-\bullet\tab New files are saved in the \cf3 same folder\cf0  (same name, new extension) and selected after convert.\par
-\bullet\tab \cf3 If a file already exists\cf0 , you are asked to \cf1 confirm overwrite\cf0 .\par
-\pard\sa200\sl276\slmult1\b\cf4 SVG output (important)\b0\cf0\par
-\pard\sa100\fi-360\li720\bullet\tab \cf1 Convert to SVG\cf0  does \b\cf4 not\b0\cf0  vector-trace your image (no paths or shapes are created).\par
-\bullet\tab The app saves the picture as \cf2 PNG\cf0  data inside a standard \cf2 .svg\cf0  file (an embedded image tag with base64 data).\par
-\bullet\tab The file opens as SVG everywhere, but it is still a \cf4 bitmap\cf0 : zooming in will show \cf4 pixels\cf0 , and vector editors will not give you editable outlines from it.\par
-\bullet\tab Use this when you need a \cf2 .svg\cf0  file for a tool or workflow; use \cf2 PNG\cf0  or \cf2 WEBP\cf0  for normal photos; use a vector tracer (e.g. Inkscape) if you need real scalable paths.\par
-\bullet\tab If the source is already a vector \cf2 .svg\cf0 , it is rasterized first, then wrapped again \endash  \cf4 original paths are not kept\cf0 .\par
-\pard\sa200\sl276\slmult1\b\cf3 Other actions\b0\cf0  (\cf1 right-click\cf0  or \cf1 File\cf0  menu)\par
-\pard\sa100\fi-360\li720\bullet\tab \cf1 File\cf0  menu groups: choose folder and refresh; open image or application folder in Explorer; paste and undo; exit.\par
-\bullet\tab \cf1 Copy\cf0  / \cf1 Copy image path\cf0\par
-\bullet\tab \cf1 Rename\cf0  (\cf1 F2\cf0 )\par
-\bullet\tab \cf1 Delete\cf0\par
-\bullet\tab \cf1 Open file location\cf0\par
-\bullet\tab \cf1 Open by Paint\cf0  or \cf1 Paint.NET\cf0\par
-\bullet\tab \cf1 Paste image\cf0  from clipboard into the folder\par
-\pard\sa200\sl276\slmult1\b\cf3 Keyboard shortcuts\b0\cf0\par
-\pard\sa100\fi-360\li720\bullet\tab \cf1 F5\cf0  \endash  refresh review\par
-\bullet\tab \cf1 F2\cf0  \endash  rename selected file\par
-\bullet\tab \cf1 Ctrl+C\cf0  \endash  copy path (when list is focused)\par
-\bullet\tab \cf1 Ctrl+V\cf0  / \cf1 Ctrl+P\cf0  \endash  paste image\par
-\bullet\tab \cf1 Ctrl+Z\cf0  \endash  undo last operation\par
-\bullet\tab \cf1 Delete\cf0  \endash  delete selected files\par
-\pard\sa200\sl276\slmult1\b\cf3 Tips\b0\cf0\par
-\pard\sa100\fi-360\li720\bullet\tab Use \cf2 small / medium / large\cf0  thumbnail size to fit more or fewer items on screen.\par
-\bullet\tab \cf1 Undo\cf0  removes converted output files from the last successful batch.\par
-\bullet\tab \cf1 Cancel\cf0  stops a conversion batch in progress.\par
-\pard\sa100\sl276\slmult1\cf3\fs20 Color key:\cf0\fs22  \cf1 blue = actions and shortcuts\cf0 ; \cf2 green = formats and features\cf0 ; \cf3 orange = important notes\cf0 ; \cf4 red = limitations and warnings\cf0 .\par
-}
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat{\fonttbl{\f0\fnil\fcharset0 Segoe UI;}}{\colortbl;\red0\green102\blue204;\red0\green130\blue70;\red196\green89\blue17;\red178\green34\blue34;}
+
+\viewkind4\uc1\pard\sa200\sl276\slmult1\b\f0\fs28 Image Converter \endash  quick guide\b0\fs22\par
+
+\pard\sa200\sl276\slmult1\b\cf3 What it is for\b0\cf0\par
+
+\pard\sa100\fi-360\li720\bullet\tab Batch-convert images in a folder among \cf2 JPEG, PNG, BMP, GIF, WEBP, ICO, SVG, and PDF\cf0 .\par
+
+\bullet\tab \cf2 Preview thumbnails\cf0 , pick files, and convert without a separate export step.\par
+
+\bullet\tab Useful for preparing web assets, icons, PDF snapshots, and format cleanup on Windows.\par
+
+\pard\sa200\sl276\slmult1\b\cf3 Getting started\b0\cf0\par
+
+\pard\sa100\fi-360\li720 1.\tab Choose an image folder (\cf1 File \endash  Open folder\cf0 , or \cf1 Browse\cf0  on the main window).\par
+
+2.\tab \cf2 Thumbnails\cf0  load in the review list. Drag a folder or files onto the list to set the folder.\par
+
+3.\tab \cf1 Select\cf0  one or more images.\par
+
+\pard\sa200\sl276\slmult1\b\cf3 Converting\b0\cf0\par
+
+\pard\sa100\fi-360\li720\bullet\tab \cf1 Right-click\cf0  a selected thumbnail \endash  \cf1 Convert to\cf0  \endash  pick a format.\par
+
+\bullet\tab \cf1 Resize\cf0  \endash  choose \cf2 0.5x, 0.75x, 2x, 4x, or Set Custom Size\cf0 . Output uses \cf2 _scaled\cf0  before the extension (e.g. \cf2 photo_scaled.png\cf0 ). Supports \cf2 JPEG, PNG, BMP, GIF, WEBP, ICO, and SVG\cf0 .\par
+
+\bullet\tab \cf1 Convert to Icon\cf0  creates or rebuilds \cf2 .ico\cf0  files using the \cf2 ICO size\cf0  and \cf2 background\cf0  settings at the top (white, black, or transparent letterbox).\par
+
+\bullet\tab Set \cf2 Background\cf0  to \cf2 Transparent (preserve alpha)\cf0  for \cf2 PNG, GIF, WEBP, ICO, or SVG\cf0 . Keeps existing alpha; keys out a uniform edge color on flat backgrounds. \cf4 Not AI removal\cf0  for complex photos (\cf4 JPG and BMP do not support transparency\cf0 ).\par
+
+\bullet\tab New files are saved in the \cf3 same folder\cf0  (same name, new extension) and selected after convert.\par
+
+\bullet\tab \cf3 If a file already exists\cf0 , you are asked to \cf1 confirm overwrite\cf0 .\par
+
+\pard\sa200\sl276\slmult1\b\cf4 SVG output (important)\b0\cf0\par
+
+\pard\sa100\fi-360\li720\bullet\tab \cf1 Convert to SVG\cf0  does \b\cf4 not\b0\cf0  vector-trace your image (no paths or shapes are created).\par
+
+\bullet\tab The app saves the picture as \cf2 PNG\cf0  data inside a standard \cf2 .svg\cf0  file (an embedded image tag with base64 data).\par
+
+\bullet\tab The file opens as SVG everywhere, but it is still a \cf4 bitmap\cf0 : zooming in will show \cf4 pixels\cf0 , and vector editors will not give you editable outlines from it.\par
+
+\bullet\tab Use this when you need a \cf2 .svg\cf0  file for a tool or workflow; use \cf2 PNG\cf0  or \cf2 WEBP\cf0  for normal photos; use a vector tracer (e.g. Inkscape) if you need real scalable paths.\par
+
+\bullet\tab If the source is already a vector \cf2 .svg\cf0 , it is rasterized first, then wrapped again \endash  \cf4 original paths are not kept\cf0 .\par
+
+\pard\sa200\sl276\slmult1\b\cf3 Other actions\b0\cf0  (\cf1 right-click\cf0  or \cf1 File\cf0  menu)\par
+
+\pard\sa100\fi-360\li720\bullet\tab In Windows Explorer, right-click a supported image to convert, scale, set a custom size, or \cf1 Open in Image Converter\cf0 . The open action is also available for folders.\par
+\bullet\tab \cf1 File\cf0  menu groups: choose folder and refresh; open image or application folder in Explorer; paste and undo; exit.\par
+
+\bullet\tab \cf1 Copy\cf0  / \cf1 Copy image path\cf0\par
+
+\bullet\tab \cf1 Rename\cf0  (\cf1 F2\cf0 )\par
+
+\bullet\tab \cf1 Delete\cf0\par
+
+\bullet\tab \cf1 Open file location\cf0\par
+
+\bullet\tab \cf1 Open by Paint\cf0  or \cf1 Paint.NET\cf0\par
+
+\bullet\tab \cf1 Paste image\cf0  from clipboard into the folder\par
+
+\pard\sa200\sl276\slmult1\b\cf3 Keyboard shortcuts\b0\cf0\par
+
+\pard\sa100\fi-360\li720\bullet\tab \cf1 F5\cf0  \endash  refresh review\par
+
+\bullet\tab \cf1 F2\cf0  \endash  rename selected file\par
+
+\bullet\tab \cf1 Ctrl+C\cf0  \endash  copy path (when list is focused)\par
+
+\bullet\tab \cf1 Ctrl+V\cf0  / \cf1 Ctrl+P\cf0  \endash  paste image\par
+
+\bullet\tab \cf1 Ctrl+Z\cf0  \endash  undo last operation\par
+
+\bullet\tab \cf1 Delete\cf0  \endash  delete selected files\par
+
+\pard\sa200\sl276\slmult1\b\cf3 Tips\b0\cf0\par
+
+\pard\sa100\fi-360\li720\bullet\tab Use \cf2 small / medium / large\cf0  thumbnail size to fit more or fewer items on screen.\par
+
+\bullet\tab \cf1 Undo\cf0  removes converted output files from the last successful batch.\par
+
+\bullet\tab \cf1 Cancel\cf0  stops a conversion batch in progress.\par
+
+\pard\sa100\sl276\slmult1\cf3\fs20 Color key:\cf0\fs22  \cf1 blue = actions and shortcuts\cf0 ; \cf2 green = formats and features\cf0 ; \cf3 orange = important notes\cf0 ; \cf4 red = limitations and warnings\cf0 .\par
+}

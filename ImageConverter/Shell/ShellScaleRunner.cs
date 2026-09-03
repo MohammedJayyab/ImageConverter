@@ -17,7 +17,7 @@ internal static class ShellScaleRunner
             if (existing.Count == 0)
             {
                 ShowError(
-                    "No resizable image files were found. Scale supports JPEG, PNG, BMP, GIF, WEBP, and ICO only.");
+                    "No resizable image files were found. Scale supports JPEG, PNG, BMP, GIF, WEBP, ICO, and SVG only.");
                 return 1;
             }
 

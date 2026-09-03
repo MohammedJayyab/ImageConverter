@@ -69,6 +69,8 @@
             toolStripSeparatorPreviewResizeScale = new ToolStripSeparator();
             toolStripMenuItemPreviewResize2x = new ToolStripMenuItem();
             toolStripMenuItemPreviewResize4x = new ToolStripMenuItem();
+            toolStripSeparatorPreviewResizeCustom = new ToolStripSeparator();
+            toolStripMenuItemPreviewResizeCustom = new ToolStripMenuItem();
             toolStripSeparatorPreviewAfterConvert = new ToolStripSeparator();
             toolStripMenuItemPreviewCopy = new ToolStripMenuItem();
             toolStripMenuItemPreviewCopyImagePath = new ToolStripMenuItem();
@@ -440,7 +442,7 @@
             chkEnableExplorerConvertMenu.Name = "chkEnableExplorerConvertMenu";
             chkEnableExplorerConvertMenu.Size = new Size(530, 29);
             chkEnableExplorerConvertMenu.TabIndex = 0;
-            chkEnableExplorerConvertMenu.Text = "Add \"Converter To\" to Windows Explorer right-click menu";
+            chkEnableExplorerConvertMenu.Text = "Add Image Converter actions to Windows Explorer right-click menu";
             chkEnableExplorerConvertMenu.UseVisualStyleBackColor = true;
             // 
             // btnRefreshExplorerConverterMenu
@@ -508,7 +510,7 @@
             // 
             // toolStripMenuItemPreviewResize
             // 
-            toolStripMenuItemPreviewResize.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItemPreviewResize05x, toolStripMenuItemPreviewResize075x, toolStripSeparatorPreviewResizeScale, toolStripMenuItemPreviewResize2x, toolStripMenuItemPreviewResize4x });
+            toolStripMenuItemPreviewResize.DropDownItems.AddRange(new ToolStripItem[] { toolStripMenuItemPreviewResize05x, toolStripMenuItemPreviewResize075x, toolStripSeparatorPreviewResizeScale, toolStripMenuItemPreviewResize2x, toolStripMenuItemPreviewResize4x, toolStripSeparatorPreviewResizeCustom, toolStripMenuItemPreviewResizeCustom });
             toolStripMenuItemPreviewResize.Name = "toolStripMenuItemPreviewResize";
             toolStripMenuItemPreviewResize.Size = new Size(231, 32);
             toolStripMenuItemPreviewResize.Text = "&Resize";
@@ -542,6 +544,17 @@
             toolStripMenuItemPreviewResize4x.Name = "toolStripMenuItemPreviewResize4x";
             toolStripMenuItemPreviewResize4x.Size = new Size(160, 34);
             toolStripMenuItemPreviewResize4x.Text = "&4×";
+            //
+            // toolStripSeparatorPreviewResizeCustom
+            //
+            toolStripSeparatorPreviewResizeCustom.Name = "toolStripSeparatorPreviewResizeCustom";
+            toolStripSeparatorPreviewResizeCustom.Size = new Size(157, 6);
+            //
+            // toolStripMenuItemPreviewResizeCustom
+            //
+            toolStripMenuItemPreviewResizeCustom.Name = "toolStripMenuItemPreviewResizeCustom";
+            toolStripMenuItemPreviewResizeCustom.Size = new Size(160, 34);
+            toolStripMenuItemPreviewResizeCustom.Text = "Set Custom Size";
             // 
             // toolStripSeparatorPreviewAfterConvert
             // 
@@ -794,6 +807,8 @@
         private ToolStripSeparator toolStripSeparatorPreviewResizeScale;
         private ToolStripMenuItem toolStripMenuItemPreviewResize2x;
         private ToolStripMenuItem toolStripMenuItemPreviewResize4x;
+        private ToolStripSeparator toolStripSeparatorPreviewResizeCustom;
+        private ToolStripMenuItem toolStripMenuItemPreviewResizeCustom;
         private ToolStripMenuItem toolStripMenuItemConvertToQuickIcon;
         private ToolStripSeparator toolStripSeparatorPreviewAfterConvert;
         private ToolStripMenuItem toolStripMenuItemPreviewCopy;
